@@ -5,12 +5,13 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { setAuthCookies, getAuthCookies } from '@/utils/auth';
 
-export default function LoginPage() {
+export default function SignupPage() {
   const router = useRouter();
-  const [role, setRole] = useState('admin'); // 'admin' or 'partner'
   const [formData, setFormData] = useState({
+    name: '',
     email: '',
-    password: ''
+    password: '',
+    confirmPassword: ''
   });
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
@@ -26,28 +27,39 @@ export default function LoginPage() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
+
+    // Validate passwords match
+    if (formData.password !== formData.confirmPassword) {
+      setError('Passwords do not match');
+      return;
+    }
+
     setLoading(true);
 
     try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/auth/${role}/login`, {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/auth/admin/signup`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(formData),
+        body: JSON.stringify({
+          name: formData.name,
+          email: formData.email,
+          password: formData.password
+        }),
       });
 
       const data = await response.json();
 
       if (!response.ok) {
-        throw new Error(data.message || 'Login failed');
+        throw new Error(data.message || 'Signup failed');
       }
 
       // Store the token in cookies
-      setAuthCookies(data.token, role);
+      setAuthCookies(data.token, 'admin');
 
-      // Redirect based on role
-      router.push(role === 'admin' ? '/admin/dashboard' : '/partner/dashboard');
+      // Redirect to admin dashboard
+      router.push('/admin/dashboard');
     } catch (err) {
       setError(err.message);
     } finally {
@@ -66,26 +78,22 @@ export default function LoginPage() {
   return (
     <div className="auth-container">
       <div className="auth-form">
-        <h1 className="text-2xl font-bold text-center mb-6">Login</h1>
-
-        <div className="toggle-container">
-          <button 
-            className={`toggle-btn ${role === 'admin' ? 'active' : ''}`}
-            onClick={() => setRole('admin')}
-            type="button"
-          >
-            Admin
-          </button>
-          <button 
-            className={`toggle-btn ${role === 'partner' ? 'active' : ''}`}
-            onClick={() => setRole('partner')}
-            type="button"
-          >
-            Partner
-          </button>
-        </div>
+        <h1 className="text-2xl font-bold text-center mb-6">Admin Signup</h1>
 
         <form onSubmit={handleSubmit}>
+          <div className="form-group">
+            <label htmlFor="name">Name</label>
+            <input
+              type="text"
+              id="name"
+              name="name"
+              value={formData.name}
+              onChange={handleChange}
+              required
+              placeholder="Enter your name"
+            />
+          </div>
+
           <div className="form-group">
             <label htmlFor="email">Email</label>
             <input
@@ -109,6 +117,21 @@ export default function LoginPage() {
               onChange={handleChange}
               required
               placeholder="Enter your password"
+              minLength={6}
+            />
+          </div>
+
+          <div className="form-group">
+            <label htmlFor="confirmPassword">Confirm Password</label>
+            <input
+              type="password"
+              id="confirmPassword"
+              name="confirmPassword"
+              value={formData.confirmPassword}
+              onChange={handleChange}
+              required
+              placeholder="Confirm your password"
+              minLength={6}
             />
           </div>
 
@@ -119,19 +142,17 @@ export default function LoginPage() {
             className="btn btn-primary mt-4"
             disabled={loading}
           >
-            {loading ? 'Logging in...' : 'Login'}
+            {loading ? 'Creating Account...' : 'Sign Up'}
           </button>
         </form>
 
-        {role === 'admin' && (
-          <p className="text-center mt-4">
-            Don't have an account?{' '}
-            <Link href="/signup" className="text-primary-color hover:underline">
-              Sign up
-            </Link>
-          </p>
-        )}
+        <p className="text-center mt-4">
+          Already have an account?{' '}
+          <Link href="/" className="text-primary-color hover:underline">
+            Login
+          </Link>
+        </p>
       </div>
     </div>
   );
-}
+} 
