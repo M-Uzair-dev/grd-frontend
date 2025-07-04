@@ -14,7 +14,6 @@ import CustomerInfo from '@/components/InfoViews/CustomerInfo';
 import UnitInfo from '@/components/InfoViews/UnitInfo';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
-import { deleteCookie } from 'cookies-next';
 import ConfirmationModal from '@/components/modals/ConfirmationModal';
 
 export default function Dashboard() {
@@ -135,9 +134,9 @@ export default function Dashboard() {
   };
 
   const handleLogout = () => {
-    // Remove auth cookies
-    deleteCookie('token');
-    deleteCookie('userRole');
+    // Clear cookies by setting them to expire
+    document.cookie = 'token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
+    document.cookie = 'userRole=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
     
     // Redirect to admin login
     router.push('/admin-login');
