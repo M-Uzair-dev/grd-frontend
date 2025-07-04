@@ -205,11 +205,13 @@ export default function Dashboard() {
         <div className="p-3 border-b border-gray-200">
           <div className="flex justify-center mb-3">
             <Image
-              src="/logo.jpg"
+              src="/logo.svg"
               alt="Logo"
               width={100}
               height={100}
               className="rounded-lg"
+              priority={true}
+              loading="eager"
             />
           </div>
           <div className="space-y-1.5">
