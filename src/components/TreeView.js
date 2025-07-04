@@ -4,18 +4,23 @@ import { useState } from 'react';
 
 const TreeNode = ({ node, level = 0, type, onItemClick }) => {
   const [isExpanded, setIsExpanded] = useState(false);
-  const indent = level * 24;
+  const indent = level * 16; // Reduced indentation for mobile
 
   const hasChildren = (type === 'partner' && node.customers?.length > 0) ||
     (type === 'customer' && (node.units?.length > 0 || node.reports?.length > 0)) ||
     (type === 'unit' && node.reports?.length > 0);
 
-  const handleExpandClick = () => {
+  const handleExpandClick = (e) => {
+    e.stopPropagation();
     setIsExpanded(!isExpanded);
   };
 
   const handleItemClick = () => {
     onItemClick(node, type);
+    // If has children, also toggle expansion on mobile
+    if (hasChildren && window.innerWidth < 1024) {
+      setIsExpanded(!isExpanded);
+    }
   };
 
   const getIcon = () => {
@@ -37,18 +42,21 @@ const TreeNode = ({ node, level = 0, type, onItemClick }) => {
     <>
       <div
         className={`
-          flex items-center py-2.5 px-4 
-          hover:bg-gray-50 transition-colors duration-150
+          flex items-center py-2 px-2 sm:px-3
+          hover:bg-gray-50 active:bg-gray-100
+          transition-colors duration-150
           rounded-lg my-0.5
+          cursor-pointer
           group
         `}
+        onClick={handleItemClick}
       >
-        <div className="flex items-center w-full" style={{ paddingLeft: `${indent}px` }}>
+        <div className="flex items-center w-full min-w-0" style={{ paddingLeft: `${indent}px` }}>
           {hasChildren ? (
             <button 
               onClick={handleExpandClick}
               className={`
-                mr-2 w-5 h-5 flex items-center justify-center
+                mr-1 sm:mr-2 w-5 h-5 flex items-center justify-center
                 text-gray-400 transition-transform duration-200 
                 hover:bg-gray-100 rounded-full
                 ${isExpanded ? 'transform rotate-90' : ''}
@@ -69,22 +77,21 @@ const TreeNode = ({ node, level = 0, type, onItemClick }) => {
               </svg>
             </button>
           ) : (
-            <span className="w-7"></span>
+            <span className="w-5 sm:w-7"></span>
           )}
-          <span className="mr-3 text-lg">{getIcon()}</span>
-          <button 
-            onClick={handleItemClick}
+          <span className="mr-2 sm:mr-3 text-base sm:text-lg flex-shrink-0">{getIcon()}</span>
+          <span 
             className={`
               flex-grow text-left font-medium text-gray-700
               hover:text-blue-600
               transition-colors duration-150
-              focus:outline-none focus:text-blue-600
+              truncate
             `}
           >
             {type === 'report' ? node.reportNumber : (node.name || node.unitName)}
-          </button>
+          </span>
           {hasChildren && (
-            <span className="text-xs text-gray-400 bg-gray-100 px-2 py-1 rounded-full">
+            <span className="ml-2 text-xs text-gray-400 bg-gray-100 px-2 py-1 rounded-full flex-shrink-0">
               {type === 'partner' ? node.customers.length :
                type === 'customer' ? node.units.length :
                node.reports.length}
@@ -142,7 +149,7 @@ const TreeNode = ({ node, level = 0, type, onItemClick }) => {
 
 export default function TreeView({ data, onItemClick }) {
   return (
-    <div className="tree-view bg-white rounded-xl shadow-sm p-2">
+    <div className="tree-view bg-white rounded-xl shadow-sm p-1 sm:p-2">
       {data.map((partner, index) => (
         <TreeNode
           key={partner._id || index}

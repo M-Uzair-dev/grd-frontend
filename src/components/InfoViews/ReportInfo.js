@@ -3,19 +3,24 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { getAuthCookies } from '@/utils/auth';
-import Button from '../Button';
-import LoadingSpinner from '../LoadingSpinner';
+import Button from '@/components/Button';
+import LoadingSpinner from '@/components/LoadingSpinner';
+import ConfirmationModal from '@/components/modals/ConfirmationModal';
 
 export default function ReportInfo({ reportId, onDelete }) {
+  const router = useRouter();
   const [report, setReport] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
-  const [isDeleting, setIsDeleting] = useState(false);
-  const router = useRouter();
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
 
   useEffect(() => {
-    const fetchReportDetails = async () => {
+    fetchReport();
+  }, [reportId]);
+
+  const fetchReport = async () => {
       try {
+      setLoading(true);
         const { token } = getAuthCookies();
         const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/reports/${reportId}`, {
           headers: {
@@ -24,34 +29,21 @@ export default function ReportInfo({ reportId, onDelete }) {
         });
 
         if (!response.ok) {
-          throw new Error('Failed to fetch report details');
+        throw new Error('Failed to fetch report');
         }
 
         const data = await response.json();
         setReport(data);
+      setError('');
       } catch (err) {
         console.error('Error in ReportInfo:', err);
         setError(err.message);
       } finally {
         setLoading(false);
       }
-    };
-
-    if (reportId) {
-      fetchReportDetails();
-    }
-  }, [reportId]);
-
-  const handleEdit = () => {
-    router.push(`/admin/reports/edit/${reportId}`);
   };
 
   const handleDelete = async () => {
-    if (!confirm('Are you sure you want to delete this report?')) return;
-
-    setIsDeleting(true);
-    setError('');
-
     try {
       const { token } = getAuthCookies();
       const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/reports/${reportId}`, {
@@ -62,17 +54,19 @@ export default function ReportInfo({ reportId, onDelete }) {
       });
 
       if (!response.ok) {
-        const data = await response.json();
-        throw new Error(data.message || 'Failed to delete report');
+        throw new Error('Failed to delete report');
       }
 
+      setShowDeleteModal(false);
       onDelete();
     } catch (err) {
       console.error('Error deleting report:', err);
-      setError(err.message || 'Failed to delete report. Please try again.');
-    } finally {
-      setIsDeleting(false);
+      setError(err.message);
     }
+  };
+
+  const handleDownload = () => {
+    window.open(`${process.env.NEXT_PUBLIC_API_URL}/api/reports/${reportId}/download`, '_blank');
   };
 
   if (loading) return <div className="h-full flex items-center justify-center"><LoadingSpinner size="lg" /></div>;
@@ -87,120 +81,74 @@ export default function ReportInfo({ reportId, onDelete }) {
   if (!report) return null;
 
   return (
-    <div className="bg-white rounded-xl shadow-sm p-6 space-y-6">
-      <div className="flex justify-between items-center border-b pb-4">
-        <h2 className="text-2xl font-semibold text-gray-800">Report Details</h2>
-        <div className="space-x-3">
+    <div className="bg-white shadow rounded-lg mt-[50px] lg:mt-0 w-full">
+      <div className="px-6 py-4 border-b border-gray-200">
+        <div className="flex justify-between items-center">
+          <h2 className="text-xl font-semibold text-gray-800">Report Information</h2>
+          <div className="flex space-x-2">
           <Button
             variant="primary"
-            size="sm"
+              onClick={handleDownload}
             icon={
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
               </svg>
             }
-            onClick={handleEdit}
-            disabled={isDeleting}
           >
-            Edit
+              Download
           </Button>
           <Button
             variant="danger"
-            size="sm"
+              onClick={() => setShowDeleteModal(true)}
             icon={
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
               </svg>
             }
-            onClick={handleDelete}
-            disabled={isDeleting}
           >
-            {isDeleting ? 'Deleting...' : 'Delete'}
+              Delete
           </Button>
-        </div>
-      </div>
-
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <div className="space-y-4">
-          <div>
-            <label className="text-sm font-medium text-gray-500">Report Number</label>
-            <p className="mt-1 text-gray-900 font-medium">{report.reportNumber}</p>
-          </div>
-          <div>
-            <label className="text-sm font-medium text-gray-500">VN Number</label>
-            <p className="mt-1 text-gray-900 font-medium">{report.vnNumber}</p>
-          </div>
-          <div>
-            <label className="text-sm font-medium text-gray-500">Status</label>
-            <div className="mt-1">
-              <span className={`
-                inline-flex items-center px-3 py-1 rounded-full text-sm font-medium
-                ${report.status === 'Active' ? 'bg-green-100 text-green-800' :
-                  report.status === 'Rejected' ? 'bg-red-100 text-red-800' :
-                  'bg-blue-100 text-blue-800'}
-              `}>
-                <span className={`
-                  w-2 h-2 rounded-full mr-2
-                  ${report.status === 'Active' ? 'bg-green-400' :
-                    report.status === 'Rejected' ? 'bg-red-400' :
-                    'bg-blue-400'}
-                `}></span>
-                {report.status}
-              </span>
-            </div>
-          </div>
-        </div>
-
-        <div className="space-y-4">
-          <div>
-            <label className="text-sm font-medium text-gray-500">Partner</label>
-            <p className="mt-1 text-gray-900">{report.partnerId?.name} ({report.partnerId?.email})</p>
-          </div>
-          {report.unitId && (
-            <div>
-              <label className="text-sm font-medium text-gray-500">Unit</label>
-              <p className="mt-1 text-gray-900">{report.unitId.unitName}</p>
-            </div>
-          )}
-          <div>
-            <label className="text-sm font-medium text-gray-500">Created At</label>
-            <p className="mt-1 text-gray-900">{new Date(report.createdAt).toLocaleDateString()}</p>
           </div>
         </div>
       </div>
-
-      <div className="space-y-4 pt-6 border-t">
-        <div>
-          <label className="text-sm font-medium text-gray-500">Admin Note</label>
-          <p className="mt-1 text-gray-900 whitespace-pre-wrap bg-gray-50 rounded-lg p-3">
-            {report.adminNote || 'No admin note'}
-          </p>
-        </div>
-        <div>
-          <label className="text-sm font-medium text-gray-500">Partner Note</label>
-          <p className="mt-1 text-gray-900 whitespace-pre-wrap bg-gray-50 rounded-lg p-3">
-            {report.partnerNote || 'No partner note'}
-          </p>
-        </div>
+      <div className="p-6">
+        <dl className="grid grid-cols-1 gap-x-4 gap-y-6 sm:grid-cols-2">
+          <div>
+            <dt className="text-sm font-medium text-gray-500">Title</dt>
+            <dd className="mt-1 text-sm text-gray-900">{report.title}</dd>
+          </div>
+          <div>
+            <dt className="text-sm font-medium text-gray-500">Unit</dt>
+            <dd className="mt-1 text-sm text-gray-900">{report.unit?.name || 'N/A'}</dd>
+          </div>
+          <div>
+            <dt className="text-sm font-medium text-gray-500">Created At</dt>
+            <dd className="mt-1 text-sm text-gray-900">
+              {new Date(report.createdAt).toLocaleDateString()}
+            </dd>
+          </div>
+          <div>
+            <dt className="text-sm font-medium text-gray-500">Last Updated</dt>
+            <dd className="mt-1 text-sm text-gray-900">
+              {new Date(report.updatedAt).toLocaleDateString()}
+            </dd>
+          </div>
+        </dl>
       </div>
 
-      <div className="pt-6 border-t">
-        <label className="text-sm font-medium text-gray-500">PDF File</label>
-        <div className="mt-2">
-          <Button
-            variant="outline"
-            icon={
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-              </svg>
-            }
-            onClick={() => window.open(`${process.env.NEXT_PUBLIC_API_URL}/${report.pdfFile}`, '_blank')}
-          >
-            View PDF
-          </Button>
-        </div>
-      </div>
+      {/* Delete Confirmation Modal */}
+      <ConfirmationModal
+        show={showDeleteModal}
+        onClose={() => setShowDeleteModal(false)}
+        onConfirm={() => {
+          handleDelete();
+          setShowDeleteModal(false);
+        }}
+        title="Delete Report"
+        message="Are you sure you want to delete this report? This action cannot be undone."
+        confirmText="Delete Report"
+        confirmColor="red"
+      />
     </div>
   );
 } 

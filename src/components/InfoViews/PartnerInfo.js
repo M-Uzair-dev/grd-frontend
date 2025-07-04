@@ -3,76 +3,47 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { getAuthCookies } from '@/utils/auth';
-import Button from '../Button';
-import LoadingSpinner from '../LoadingSpinner';
+import Button from '@/components/Button';
+import LoadingSpinner from '@/components/LoadingSpinner';
+import ConfirmationModal from '@/components/modals/ConfirmationModal';
 
 export default function PartnerInfo({ partnerId, onDelete }) {
+  const router = useRouter();
   const [partner, setPartner] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
-  const [isDeleting, setIsDeleting] = useState(false);
-  const router = useRouter();
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
 
   useEffect(() => {
-    const fetchPartnerDetails = async () => {
+    fetchPartner();
+  }, [partnerId]);
+
+  const fetchPartner = async () => {
       try {
+      setLoading(true);
         const { token } = getAuthCookies();
-        
-        // First get the basic partner info
-        const partnerResponse = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/partners/${partnerId}`, {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/partners/${partnerId}`, {
           headers: {
             'Authorization': `Bearer ${token}`
           }
         });
 
-        if (!partnerResponse.ok) {
-          throw new Error('Failed to fetch partner details');
-        }
+      if (!response.ok) {
+        throw new Error('Failed to fetch partner');
+      }
 
-        const partnerData = await partnerResponse.json();
-
-        // Then get the customers for this partner
-        const customersResponse = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/customers/partner/${partnerId}`, {
-          headers: {
-            'Authorization': `Bearer ${token}`
-          }
-        });
-
-        if (!customersResponse.ok) {
-          throw new Error('Failed to fetch partner customers');
-        }
-
-        const customersData = await customersResponse.json();
-        
-        // Combine the data
-        const combinedData = {
-          ...partnerData,
-          customers: customersData
-        };
-        setPartner(combinedData);
+      const data = await response.json();
+      setPartner(data);
+      setError('');
       } catch (err) {
         console.error('Error in PartnerInfo:', err);
         setError(err.message);
       } finally {
         setLoading(false);
       }
-    };
-
-    if (partnerId) {
-      fetchPartnerDetails();
-    }
-  }, [partnerId]);
-
-  const handleEdit = () => {
-    router.push(`/admin/partners/edit/${partnerId}`);
   };
 
   const handleDelete = async () => {
-    if (!confirm('Are you sure you want to delete this partner? This will also delete all associated customers, units, and reports.')) return;
-
-    setIsDeleting(true);
-    setError('');
-
     try {
       const { token } = getAuthCookies();
       const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/partners/${partnerId}`, {
@@ -83,16 +54,13 @@ export default function PartnerInfo({ partnerId, onDelete }) {
       });
 
       if (!response.ok) {
-        const data = await response.json();
-        throw new Error(data.message || 'Failed to delete partner');
+        throw new Error('Failed to delete partner');
       }
 
       onDelete();
     } catch (err) {
       console.error('Error deleting partner:', err);
-      setError(err.message || 'Failed to delete partner. Please try again.');
-    } finally {
-      setIsDeleting(false);
+      setError(err.message);
     }
   };
 
@@ -108,83 +76,74 @@ export default function PartnerInfo({ partnerId, onDelete }) {
   if (!partner) return null;
 
   return (
-    <div className="bg-white rounded-xl shadow-sm p-6 space-y-6">
-      <div className="flex justify-between items-center border-b pb-4">
-        <h2 className="text-2xl font-semibold text-gray-800">Partner Details</h2>
-        <div className="space-x-3">
+    <div className="bg-white shadow rounded-lg mt-[50px] lg:mt-0 w-full">
+      <div className="px-6 py-4 border-b border-gray-200">
+        <div className="flex justify-between items-center">
+          <h2 className="text-xl font-semibold text-gray-800">Partner Information</h2>
+          <div className="flex space-x-2">
           <Button
             variant="primary"
-            size="sm"
+              onClick={() => router.push(`/admin/partners/edit/${partnerId}`)}
             icon={
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
               </svg>
             }
-            onClick={handleEdit}
           >
             Edit
           </Button>
           <Button
             variant="danger"
-            size="sm"
+              onClick={() => setShowDeleteModal(true)}
             icon={
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
               </svg>
             }
-            onClick={handleDelete}
           >
             Delete
           </Button>
         </div>
       </div>
-
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <div className="space-y-4">
+      </div>
+      <div className="p-6">
+        <dl className="grid grid-cols-1 gap-x-4 gap-y-6 sm:grid-cols-2">
           <div>
-            <label className="text-sm font-medium text-gray-500">Name</label>
-            <p className="mt-1 text-gray-900 font-medium">{partner.name}</p>
+            <dt className="text-sm font-medium text-gray-500">Name</dt>
+            <dd className="mt-1 text-sm text-gray-900">{partner.name}</dd>
           </div>
           <div>
-            <label className="text-sm font-medium text-gray-500">Email</label>
-            <p className="mt-1 text-gray-900">{partner.email}</p>
+            <dt className="text-sm font-medium text-gray-500">Email</dt>
+            <dd className="mt-1 text-sm text-gray-900">{partner.email}</dd>
           </div>
           <div>
-            <label className="text-sm font-medium text-gray-500">Created At</label>
-            <p className="mt-1 text-gray-900">{new Date(partner.createdAt).toLocaleDateString()}</p>
+            <dt className="text-sm font-medium text-gray-500">Created At</dt>
+            <dd className="mt-1 text-sm text-gray-900">
+              {new Date(partner.createdAt).toLocaleDateString()}
+            </dd>
           </div>
-        </div>
-
-        <div>
           <div>
-            <label className="text-sm font-medium text-gray-500">Total Customers</label>
-            <p className="mt-1 text-gray-900 font-medium">{partner.customers?.length || 0}</p>
+            <dt className="text-sm font-medium text-gray-500">Last Updated</dt>
+            <dd className="mt-1 text-sm text-gray-900">
+              {new Date(partner.updatedAt).toLocaleDateString()}
+            </dd>
           </div>
-        </div>
+        </dl>
       </div>
 
-      {partner.customers?.length > 0 && (
-        <div className="pt-6 border-t">
-          <label className="text-sm font-medium text-gray-500 block mb-3">Customers</label>
-          <div className="bg-gray-50 rounded-lg divide-y divide-gray-100">
-            {partner.customers.map(customer => (
-              <div key={customer._id || customer.id} className="p-4 hover:bg-gray-100 transition-colors duration-150">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <h3 className="font-medium text-gray-900">{customer.name}</h3>
-                    <p className="text-sm text-gray-600">{customer.email}</p>
-                  </div>
-                  {customer.units?.length > 0 && (
-                    <span className="text-sm text-gray-500 bg-white px-2 py-1 rounded-full border">
-                      {customer.units.length} Units
-                    </span>
-                  )}
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
+      {/* Delete Confirmation Modal */}
+      <ConfirmationModal
+        show={showDeleteModal}
+        onClose={() => setShowDeleteModal(false)}
+        onConfirm={() => {
+          handleDelete();
+          setShowDeleteModal(false);
+        }}
+        title="Delete Partner"
+        message="Are you sure you want to delete this partner? This action cannot be undone and will also delete all associated customers, units, and reports."
+        confirmText="Delete Partner"
+        confirmColor="red"
+      />
     </div>
   );
 } 

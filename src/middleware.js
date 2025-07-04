@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 
 // List of public routes that don't require authentication
-const publicRoutes = ['/', '/signup'];
+const publicRoutes = ['/', '/admin-login'];
 
 // List of routes that require admin authentication
 const adminRoutes = ['/admin'];
@@ -29,6 +29,10 @@ export function middleware(request) {
 
   // If user is not authenticated and trying to access protected routes
   if (!token && !isPublicRoute) {
+    // Redirect admin routes to admin login, others to partner login
+    if (pathname.startsWith('/admin')) {
+      return NextResponse.redirect(new URL('/admin-login', request.url));
+    }
     return NextResponse.redirect(new URL('/', request.url));
   }
 

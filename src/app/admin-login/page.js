@@ -2,11 +2,10 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import Link from 'next/link';
 import Image from 'next/image';
 import { setAuthCookies, getAuthCookies } from '@/utils/auth';
 
-export default function PartnerLoginPage() {
+export default function AdminLoginPage() {
   const router = useRouter();
   const [formData, setFormData] = useState({
     email: '',
@@ -29,7 +28,7 @@ export default function PartnerLoginPage() {
     setLoading(true);
 
     try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/auth/partner/login`, {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/auth/admin/login`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -44,10 +43,10 @@ export default function PartnerLoginPage() {
       }
 
       // Store the token in cookies
-      setAuthCookies(data.token, 'partner');
+      setAuthCookies(data.token, 'admin');
 
-      // Redirect to partner dashboard
-      router.push('/partner/dashboard');
+      // Redirect to admin dashboard
+      router.push('/admin/dashboard');
     } catch (err) {
       setError(err.message);
     } finally {
@@ -75,9 +74,8 @@ export default function PartnerLoginPage() {
             className="mb-6"
           />
           <h2 className="text-center text-3xl font-extrabold text-gray-900">
-            Partner Login
+            Admin Login
           </h2>
-          
         </div>
 
         <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
@@ -86,32 +84,32 @@ export default function PartnerLoginPage() {
               <label htmlFor="email" className="block text-sm font-medium text-gray-700">
                 Email
               </label>
-            <input
-              type="email"
-              id="email"
-              name="email"
-              value={formData.email}
-              onChange={handleChange}
-              required
+              <input
+                type="email"
+                id="email"
+                name="email"
+                value={formData.email}
+                onChange={handleChange}
+                required
                 className="mt-1 appearance-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded focus:outline-none focus:ring-blue-500 focus:border-blue-500 focus:z-10 sm:text-sm"
-              placeholder="Enter your email"
-            />
-          </div>
+                placeholder="Enter your email"
+              />
+            </div>
 
             <div className="mb-4">
               <label htmlFor="password" className="block text-sm font-medium text-gray-700">
                 Password
               </label>
-            <input
-              type="password"
-              id="password"
-              name="password"
-              value={formData.password}
-              onChange={handleChange}
-              required
+              <input
+                type="password"
+                id="password"
+                name="password"
+                value={formData.password}
+                onChange={handleChange}
+                required
                 className="mt-1 appearance-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded focus:outline-none focus:ring-blue-500 focus:border-blue-500 focus:z-10 sm:text-sm"
-              placeholder="Enter your password"
-            />
+                placeholder="Enter your password"
+              />
             </div>
           </div>
 
@@ -121,8 +119,8 @@ export default function PartnerLoginPage() {
             </div>
           )}
 
-          <button 
-            type="submit" 
+          <button
+            type="submit"
             disabled={loading}
             className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50"
           >
@@ -132,4 +130,4 @@ export default function PartnerLoginPage() {
       </div>
     </div>
   );
-}
+} 

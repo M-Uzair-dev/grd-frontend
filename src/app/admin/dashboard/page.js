@@ -12,8 +12,13 @@ import ReportInfo from '@/components/InfoViews/ReportInfo';
 import PartnerInfo from '@/components/InfoViews/PartnerInfo';
 import CustomerInfo from '@/components/InfoViews/CustomerInfo';
 import UnitInfo from '@/components/InfoViews/UnitInfo';
+import Image from 'next/image';
+import { useRouter } from 'next/navigation';
+import { deleteCookie } from 'cookies-next';
+import ConfirmationModal from '@/components/modals/ConfirmationModal';
 
 export default function Dashboard() {
+  const router = useRouter();
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -21,6 +26,8 @@ export default function Dashboard() {
   const [showPartnerModal, setShowPartnerModal] = useState(false);
   const [showCustomerModal, setShowCustomerModal] = useState(false);
   const [showReportModal, setShowReportModal] = useState(false);
+  const [showLogoutModal, setShowLogoutModal] = useState(false);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(true);
 
   const fetchData = async () => {
     try {
@@ -76,20 +83,44 @@ export default function Dashboard() {
         })) || []
       })));
     } else if (type === 'report') {
-      setData(data.map(partner => ({
-        ...partner,
-        customers: partner.customers?.map(customer => ({
-          ...customer,
-          units: customer.units?.map(unit => ({
-            ...unit,
-            reports: unit.reports?.filter(report => report._id !== id) || []
-          })) || []
-        })) || []
-      })));
+      setData(prevData => {
+        // Create a deep copy of the data
+        const newData = JSON.parse(JSON.stringify(prevData));
+        
+        // Traverse through the tree to find and remove the report
+        for (const partner of newData) {
+          if (partner.customers) {
+            for (const customer of partner.customers) {
+              if (customer.units) {
+                for (const unit of customer.units) {
+                  if (unit.reports) {
+                    const reportIndex = unit.reports.findIndex(report => report._id === id);
+                    if (reportIndex !== -1) {
+                      unit.reports.splice(reportIndex, 1);
+                      return newData;
+                    }
+                  }
+                }
+              }
+              // Also check for reports directly under customer
+              if (customer.reports) {
+                const reportIndex = customer.reports.findIndex(report => report._id === id);
+                if (reportIndex !== -1) {
+                  customer.reports.splice(reportIndex, 1);
+                  return newData;
+                }
+              }
+            }
+          }
+        }
+        return newData;
+      });
     }
     
-    // Clear the selected item
+    // Clear the selected item if it was deleted
+    if (selectedItem && selectedItem._id === id) {
     setSelectedItem(null);
+    }
   };
 
   const handleModalClose = () => {
@@ -103,6 +134,15 @@ export default function Dashboard() {
     fetchData();
   };
 
+  const handleLogout = () => {
+    // Remove auth cookies
+    deleteCookie('token');
+    deleteCookie('userRole');
+    
+    // Redirect to admin login
+    router.push('/admin-login');
+  };
+
   if (loading) return <div className="h-full flex items-center justify-center"><LoadingSpinner size="lg" /></div>;
   if (error) return (
     <div className="bg-red-50 p-4 rounded-lg text-red-600 flex items-center">
@@ -114,16 +154,71 @@ export default function Dashboard() {
   );
 
   return (
-    <div className="flex h-[calc(100vh-4rem)]">
+    <div className="relative flex h-[calc(100vh-4rem)]">
+      {/* Mobile Sidebar Toggle Button */}
+      <button
+        className="lg:hidden fixed top-4 left-4 z-50 p-2 rounded-md bg-white shadow-lg"
+        onClick={() => setIsSidebarOpen(!isSidebarOpen)}
+      >
+        <svg
+          className="w-6 h-6 text-gray-600"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+        >
+          {isSidebarOpen ? (
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M6 18L18 6M6 6l12 12"
+            />
+          ) : (
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M4 6h16M4 12h16M4 18h16"
+            />
+          )}
+        </svg>
+      </button>
+
+      {/* Sidebar Overlay */}
+      {isSidebarOpen && (
+        <div
+          className="lg:hidden fixed inset-0 bg-black bg-opacity-50 z-40"
+          onClick={() => setIsSidebarOpen(false)}
+        />
+      )}
+
       {/* Left Sidebar */}
-      <div className="w-80 bg-white border-r border-gray-200 flex flex-col">
-        <div className="p-4 border-b border-gray-200">
-          <div className="space-y-2">
+      <div
+        className={`
+          fixed lg:static inset-y-0 left-0 z-40
+          w-80 bg-white border-r border-gray-200 
+          transform transition-transform duration-300 ease-in-out
+          ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'}
+          lg:translate-x-0 lg:flex lg:flex-col
+        `}
+      >
+        {/* Logo Section */}
+        <div className="p-3 border-b border-gray-200">
+          <div className="flex justify-center mb-3">
+            <Image
+              src="/logo.jpg"
+              alt="Logo"
+              width={100}
+              height={100}
+              className="rounded-lg"
+            />
+          </div>
+          <div className="space-y-1.5">
             <Button
               variant="primary"
-              className="w-full justify-center"
+              className="w-full justify-center py-1.5 text-sm"
               icon={
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z" />
                 </svg>
               }
@@ -133,9 +228,9 @@ export default function Dashboard() {
             </Button>
             <Button
               variant="primary"
-              className="w-full justify-center"
+              className="w-full justify-center py-1.5 text-sm"
               icon={
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
                 </svg>
               }
@@ -145,9 +240,9 @@ export default function Dashboard() {
             </Button>
             <Button
               variant="primary"
-              className="w-full justify-center"
+              className="w-full justify-center py-1.5 text-sm"
               icon={
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 13h6m-3-3v6m5 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                 </svg>
               }
@@ -155,15 +250,33 @@ export default function Dashboard() {
             >
               Add Report
             </Button>
+            <Button
+              variant="danger"
+              className="w-full justify-center py-1.5 text-sm"
+              icon={
+                <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                </svg>
+              }
+              onClick={() => setShowLogoutModal(true)}
+            >
+              Logout
+            </Button>
           </div>
         </div>
         <div className="flex-1 overflow-y-auto p-4">
-          <TreeView data={data} onItemClick={handleItemClick} />
+          <TreeView data={data} onItemClick={(item, type) => {
+            handleItemClick(item, type);
+            // Close sidebar on mobile after selection
+            if (window.innerWidth < 1024) {
+              setIsSidebarOpen(false);
+            }
+          }} />
         </div>
       </div>
 
       {/* Main Content */}
-      <div className="flex-1 overflow-y-auto p-6 bg-gray-50">
+      <div className="flex-1 overflow-y-auto p-4 lg:p-6 ml-0">
         {selectedItem ? (
           selectedItem.type === 'report' ? (
             <ReportInfo 
@@ -215,6 +328,18 @@ export default function Dashboard() {
         onClose={handleModalClose}
         onSuccess={handleModalSuccess}
         partners={data}
+      />
+      <ConfirmationModal
+        show={showLogoutModal}
+        onClose={() => setShowLogoutModal(false)}
+        onConfirm={() => {
+          handleLogout();
+          setShowLogoutModal(false);
+        }}
+        title="Confirm Logout"
+        message="Are you sure you want to log out? You will need to log in again to access the dashboard."
+        confirmText="Logout"
+        confirmColor="red"
       />
     </div>
   );
