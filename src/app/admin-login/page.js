@@ -66,13 +66,13 @@ export default function AdminLoginPage() {
     <div className="min-h-screen flex flex-col items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-md w-full space-y-8 bg-white p-8 rounded-lg shadow-md">
         <div className="flex flex-col items-center">
-          <Image
-            src="/logo.jpg"
-            alt="Logo"
-            width={150}
-            height={150}
-            className="mb-6"
-          />
+        <Image
+              src="/logo.jpg"
+              alt="Logo"
+              width={100}
+              height={100}
+              className="rounded-lg"
+            />
           <h2 className="text-center text-3xl font-extrabold text-gray-900">
             Admin Login
           </h2>
