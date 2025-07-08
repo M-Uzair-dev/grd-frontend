@@ -5,6 +5,7 @@ const nextConfig = {
     dangerouslyAllowSVG: true,
     contentDispositionType: 'attachment',
     contentSecurityPolicy: "default-src 'self'; script-src 'none'; sandbox;",
+    domains: ['res.cloudinary.com'],
   },
   webpack(config) {
     // Grab the existing rule that handles SVG imports
@@ -35,8 +36,12 @@ const nextConfig = {
     // Modify the file loader rule to ignore *.svg, since we have it handled now.
     fileLoaderRule.exclude = /\.svg$/i
 
+    config.resolve.alias.canvas = false;
+    config.resolve.alias.encoding = false;
+
     return config
   },
+  transpilePackages: ['react-pdf', '@react-pdf/renderer'],
 };
 
 export default nextConfig;

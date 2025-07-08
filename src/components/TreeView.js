@@ -32,7 +32,7 @@ const TreeNode = ({ node, level = 0, type, onItemClick }) => {
       case 'unit':
         return '🚗';
       case 'report':
-        return '📊';
+        return node.isNew ? '🔔' : '📊';
       default:
         return '📄';
     }
@@ -43,11 +43,13 @@ const TreeNode = ({ node, level = 0, type, onItemClick }) => {
       <div
         className={`
           flex items-center py-2 px-2 sm:px-3
-          hover:bg-gray-50 active:bg-gray-100
+          ${type === 'report' && node.isNew ? 'bg-yellow-50 hover:bg-yellow-100' : 'hover:bg-gray-50'}
+          active:bg-gray-100
           transition-colors duration-150
           rounded-lg my-0.5
           cursor-pointer
           group
+          ${type === 'report' && node.isNew ? 'animate-pulse' : ''}
         `}
         onClick={handleItemClick}
       >
@@ -82,7 +84,8 @@ const TreeNode = ({ node, level = 0, type, onItemClick }) => {
           <span className="mr-2 sm:mr-3 text-base sm:text-lg flex-shrink-0">{getIcon()}</span>
           <span 
             className={`
-              flex-grow text-left font-medium text-gray-700
+              flex-grow text-left font-medium
+              ${type === 'report' && node.isNew ? 'text-yellow-700' : 'text-gray-700'}
               hover:text-blue-600
               transition-colors duration-150
               truncate
@@ -95,6 +98,11 @@ const TreeNode = ({ node, level = 0, type, onItemClick }) => {
               {type === 'partner' ? node.customers.length :
                type === 'customer' ? node.units.length :
                node.reports.length}
+            </span>
+          )}
+          {type === 'report' && node.isNew && (
+            <span className="ml-2 text-xs text-yellow-600 bg-yellow-100 px-2 py-1 rounded-full flex-shrink-0">
+              New
             </span>
           )}
         </div>

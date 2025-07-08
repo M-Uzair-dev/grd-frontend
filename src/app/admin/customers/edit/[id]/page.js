@@ -74,7 +74,7 @@ export default function EditCustomer({ params }) {
         body: JSON.stringify({
           name: customer.name,
           email: customer.email,
-          partnerId: customer.partnerId
+          partnerId: customer.partnerId._id
         })
       });
 
@@ -143,8 +143,8 @@ export default function EditCustomer({ params }) {
               Partner
             </label>
             <select
-              value={customer.partnerId}
-              onChange={(e) => setCustomer({ ...customer, partnerId: e.target.value })}
+              value={customer.partnerId._id}
+              onChange={(e) => setCustomer({ ...customer, partnerId: { ...customer.partnerId, _id: e.target.value } })}
               className="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm rounded-md"
             >
               <option value="">Select a partner</option>
