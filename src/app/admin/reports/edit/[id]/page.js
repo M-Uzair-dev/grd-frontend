@@ -23,7 +23,6 @@ export default function EditReport({ params }) {
     reportNumber: '',
     vnNumber: '',
     adminNote: '',
-    partnerNote: '',
     status: '',
     partnerId: '',
     customerId: '',
@@ -107,7 +106,6 @@ export default function EditReport({ params }) {
         reportNumber: data.reportNumber,
         vnNumber: data.vnNumber,
         adminNote: data.adminNote || '',
-        partnerNote: data.partnerNote || '',
         status: data.status,
         partnerId: data.partnerId?._id || '',
         customerId: data.customerId?._id || '',
@@ -367,19 +365,6 @@ export default function EditReport({ params }) {
               value={formData.adminNote}
               onChange={handleChange}
               name="adminNote"
-              rows={4}
-              className="shadow-sm focus:ring-blue-500 focus:border-blue-500 block w-full sm:text-sm border-gray-300 rounded-md"
-            />
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Partner Note
-            </label>
-            <textarea
-              value={formData.partnerNote}
-              onChange={handleChange}
-              name="partnerNote"
               rows={4}
               className="shadow-sm focus:ring-blue-500 focus:border-blue-500 block w-full sm:text-sm border-gray-300 rounded-md"
             />

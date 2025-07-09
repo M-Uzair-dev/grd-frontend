@@ -245,45 +245,40 @@ export default function PartnerDashboard() {
 
       {/* Main Content */}
       <div className="flex-1 overflow-y-auto p-4 lg:p-6 bg-gray-50">
+        {/* Partner Name Heading */}
+        {data && data[0] && (
+          <div className="mb-6">
+            <h1 className="text-2xl font-bold text-gray-800">
+              Welcome, {data[0].name}
+            </h1>
+          </div>
+        )}
+
         {/* New Reports Chips */}
         <NewReportsChips reports={newReports} onReportClick={handleReportChipClick} />
 
-        {selectedItem ? (
-          selectedItem.type === 'report' ? (
-            <ReportInfo 
-              reportId={selectedItem._id} 
+        {/* Selected Item Info */}
+        <div className="mt-6">
+          {selectedItem?.type === 'report' && (
+            <ReportInfo
+              reportId={selectedItem._id}
               isPartnerView={true}
+              onUpdate={fetchData}
             />
-          ) : selectedItem.type === 'customer' ? (
-            <CustomerInfo 
+          )}
+          {selectedItem?.type === 'customer' && (
+            <CustomerInfo
               customerId={selectedItem._id}
               isPartnerView={true}
             />
-          ) : selectedItem.type === 'unit' ? (
-            <UnitInfo 
+          )}
+          {selectedItem?.type === 'unit' && (
+            <UnitInfo
               unitId={selectedItem._id}
               isPartnerView={true}
             />
-          ) : (
-            <div className="h-full flex items-center justify-center text-gray-500">
-              <div className="text-center">
-                <svg className="w-12 h-12 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16m-7 6h7" />
-                </svg>
-                <p>Select an item from the sidebar to view details</p>
-              </div>
-            </div>
-          )
-        ) : (
-          <div className="h-full flex items-center justify-center text-gray-500">
-            <div className="text-center">
-              <svg className="w-12 h-12 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16m-7 6h7" />
-              </svg>
-              <p>Select an item from the sidebar to view details</p>
-            </div>
-          </div>
-        )}
+          )}
+        </div>
       </div>
 
       {/* Logout Confirmation Modal */}

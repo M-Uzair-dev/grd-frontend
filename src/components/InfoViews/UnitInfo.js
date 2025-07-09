@@ -123,6 +123,13 @@ export default function UnitInfo({ unitId, onDelete, isPartnerView = false }) {
             </dd>
           </div>
           <div>
+            <dt className="text-sm font-medium text-gray-500">Partner</dt>
+            <dd className="mt-1 text-sm text-gray-900">
+              <div>{unit.customerId?.partnerId?.name || 'N/A'}</div>
+              <div className="text-gray-500 text-xs">{unit.customerId?.partnerId?.email || ''}</div>
+            </dd>
+          </div>
+          <div>
             <dt className="text-sm font-medium text-gray-500">Reports</dt>
             <dd className="mt-1 text-sm text-gray-900">
               {unit.reports?.length > 0 ? (

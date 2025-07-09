@@ -8,7 +8,7 @@ import LoadingSpinner from '@/components/LoadingSpinner';
 import ConfirmationModal from '@/components/modals/ConfirmationModal';
 import FormField from '@/components/FormField';
 
-export default function ReportInfo({ reportId, onDelete, isPartnerView = false }) {
+export default function ReportInfo({ reportId, onDelete, isPartnerView = false, onUpdate }) {
   const router = useRouter();
   const [report, setReport] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -16,6 +16,7 @@ export default function ReportInfo({ reportId, onDelete, isPartnerView = false }
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [downloading, setDownloading] = useState(false);
   const [sending, setSending] = useState(false);
+  const [sendingToPartner, setSendingToPartner] = useState(false);
   const [partnerNote, setPartnerNote] = useState('');
   const [noteUpdated, setNoteUpdated] = useState(false);
   const [markingAsRead, setMarkingAsRead] = useState(false);
@@ -189,11 +190,40 @@ export default function ReportInfo({ reportId, onDelete, isPartnerView = false }
       const data = await response.json();
       setReport(data.report);
       setError('');
+      if (onUpdate) {
+        onUpdate();
+      }
     } catch (err) {
       console.error('Error marking report as read:', err);
       setError(err.message);
     } finally {
       setMarkingAsRead(false);
+    }
+  };
+
+  const handleSendToPartner = async () => {
+    try {
+      setSendingToPartner(true);
+      const { token } = getAuthCookies();
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/reports/${reportId}/send-to-partner`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to send report to partner');
+      }
+
+      const data = await response.json();
+      setError('');
+      alert('Report sent successfully to partner');
+    } catch (err) {
+      console.error('Error sending report to partner:', err);
+      setError(err.message);
+    } finally {
+      setSendingToPartner(false);
     }
   };
 
@@ -228,6 +258,18 @@ export default function ReportInfo({ reportId, onDelete, isPartnerView = false }
             </Button>
             {!isPartnerView && (
               <>
+                <Button
+                  variant="secondary"
+                  onClick={handleSendToPartner}
+                  disabled={sendingToPartner}
+                  icon={
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                    </svg>
+                  }
+                >
+                  {sendingToPartner ? 'Sending...' : 'Send Email'}
+                </Button>
                 <Button
                   variant="secondary"
                   onClick={() => router.push(`/admin/reports/edit/${reportId}`)}

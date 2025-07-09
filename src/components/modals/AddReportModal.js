@@ -150,7 +150,7 @@ export default function AddReportModal({ isOpen, onClose, onSuccess }) {
     }
   };
 
-  const handleSubmit = async (e) => {
+  const handleSubmit = async (e, sendEmail = true) => {
     e.preventDefault();
     setError('');
     setLoading(true);
@@ -174,6 +174,9 @@ export default function AddReportModal({ isOpen, onClose, onSuccess }) {
           }
         }
       });
+
+      // Add sendEmail parameter
+      formDataToSend.append('sendEmail', sendEmail);
 
       const { token } = getAuthCookies();
       const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/reports`, {
@@ -424,20 +427,37 @@ export default function AddReportModal({ isOpen, onClose, onSuccess }) {
           </select>
         </div>
 
-        <div className="flex justify-end space-x-3 pt-4">
+        <div className="flex justify-end space-x-2 mt-6">
           <button
             type="button"
             onClick={onClose}
-            className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50"
+            className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
           >
             Cancel
           </button>
           <button
-            type="submit"
+            type="button"
+            onClick={(e) => handleSubmit(e, false)}
             disabled={loading}
-            className="px-4 py-2 text-sm font-medium text-white bg-blue-500 rounded-md hover:bg-blue-600 disabled:opacity-50"
+            className={`
+              px-4 py-2 text-sm font-medium text-white bg-gray-600 rounded-md
+              hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500
+              ${loading ? 'opacity-75 cursor-not-allowed' : ''}
+            `}
           >
-            {loading ? 'Creating...' : 'Create Report'}
+            {loading ? 'Creating...' : 'Create'}
+          </button>
+          <button
+            type="button"
+            onClick={(e) => handleSubmit(e, true)}
+            disabled={loading}
+            className={`
+              px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-md
+              hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500
+              ${loading ? 'opacity-75 cursor-not-allowed' : ''}
+            `}
+          >
+            {loading ? 'Creating...' : 'Create with Email'}
           </button>
         </div>
       </form>
