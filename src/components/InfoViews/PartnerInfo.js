@@ -134,16 +134,11 @@ export default function PartnerInfo({ partnerId, onDelete }) {
 
       {/* Delete Confirmation Modal */}
       <ConfirmationModal
-        show={showDeleteModal}
+        isOpen={showDeleteModal}
         onClose={() => setShowDeleteModal(false)}
-        onConfirm={() => {
-          handleDelete();
-          setShowDeleteModal(false);
-        }}
+        onConfirm={handleDelete}
         title="Delete Partner"
         message="Are you sure you want to delete this partner? This action cannot be undone and will also delete all associated customers, units, and reports."
-        confirmText="Delete Partner"
-        confirmColor="red"
       />
     </div>
   );

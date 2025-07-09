@@ -167,16 +167,11 @@ export default function UnitInfo({ unitId, onDelete, isPartnerView = false }) {
 
       {/* Delete Confirmation Modal */}
       <ConfirmationModal
-        show={showDeleteModal}
+        isOpen={showDeleteModal}
         onClose={() => setShowDeleteModal(false)}
-        onConfirm={() => {
-          handleDelete();
-          setShowDeleteModal(false);
-        }}
+        onConfirm={handleDelete}
         title="Delete Unit"
-        message="Are you sure you want to delete this unit? This action cannot be undone and will also delete all associated reports."
-        confirmText="Delete Unit"
-        confirmColor="red"
+        message="Are you sure you want to delete this unit? This action cannot be undone."
       />
     </div>
   );

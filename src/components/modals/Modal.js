@@ -4,7 +4,7 @@ import { useEffect } from 'react';
 import Button from '../Button';
 
 export default function Modal({
-  show,
+  isOpen,
   onClose,
   title,
   children,
@@ -19,7 +19,7 @@ export default function Modal({
       }
     };
 
-    if (show) {
+    if (isOpen) {
       document.addEventListener('keydown', handleEscape);
       document.body.style.overflow = 'hidden';
     }
@@ -28,9 +28,9 @@ export default function Modal({
       document.removeEventListener('keydown', handleEscape);
       document.body.style.overflow = 'unset';
     };
-  }, [show, onClose]);
+  }, [isOpen, onClose]);
 
-  if (!show) return null;
+  if (!isOpen) return null;
 
   const sizeClasses = {
     sm: 'max-w-md',

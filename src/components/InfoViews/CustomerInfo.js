@@ -146,16 +146,11 @@ export default function CustomerInfo({ customerId, onDelete, isPartnerView = fal
 
       {/* Delete Confirmation Modal */}
       <ConfirmationModal
-        show={showDeleteModal}
+        isOpen={showDeleteModal}
         onClose={() => setShowDeleteModal(false)}
-        onConfirm={() => {
-          handleDelete();
-          setShowDeleteModal(false);
-        }}
+        onConfirm={handleDelete}
         title="Delete Customer"
         message="Are you sure you want to delete this customer? This action cannot be undone and will also delete all associated units and reports."
-        confirmText="Delete Customer"
-        confirmColor="red"
       />
     </div>
   );

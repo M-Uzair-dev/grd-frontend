@@ -286,18 +286,13 @@ export default function PartnerDashboard() {
         )}
       </div>
 
-      {/* Modals */}
+      {/* Logout Confirmation Modal */}
       <ConfirmationModal
-        show={showLogoutModal}
+        isOpen={showLogoutModal}
         onClose={() => setShowLogoutModal(false)}
-        onConfirm={() => {
-          handleLogout();
-          setShowLogoutModal(false);
-        }}
+        onConfirm={handleLogout}
         title="Confirm Logout"
-        message="Are you sure you want to log out? You will need to log in again to access the dashboard."
-        confirmText="Logout"
-        confirmColor="red"
+        message="Are you sure you want to logout?"
       />
     </div>
   );

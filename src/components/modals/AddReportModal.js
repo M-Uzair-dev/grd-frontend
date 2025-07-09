@@ -3,8 +3,10 @@
 import { useState, useEffect } from 'react';
 import { getAuthCookies } from '@/utils/auth';
 import Modal from './Modal';
+import Button from '../Button';
+import FormField from '../FormField';
 
-export default function AddReportModal({ partners, onClose, onSuccess, show }) {
+export default function AddReportModal({ isOpen, onClose, onSuccess }) {
   const [formData, setFormData] = useState({
     reportNumber: '',
     vnNumber: '',
@@ -16,6 +18,7 @@ export default function AddReportModal({ partners, onClose, onSuccess, show }) {
     status: 'Active'
   });
 
+  const [partners, setPartners] = useState([]);
   const [customers, setCustomers] = useState([]);
   const [units, setUnits] = useState([]);
   const [showNewUnit, setShowNewUnit] = useState(false);
@@ -23,6 +26,34 @@ export default function AddReportModal({ partners, onClose, onSuccess, show }) {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const [unitError, setUnitError] = useState('');
+
+  // Fetch partners on mount
+  useEffect(() => {
+    const fetchPartners = async () => {
+      try {
+        const { token } = getAuthCookies();
+        const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/partners/nested`, {
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        });
+
+        if (!response.ok) {
+          throw new Error('Failed to fetch partners');
+        }
+
+        const data = await response.json();
+        setPartners(data);
+      } catch (err) {
+        console.error('Error fetching partners:', err);
+        setError(err.message);
+      }
+    };
+
+    if (isOpen) {
+      fetchPartners();
+    }
+  }, [isOpen]);
 
   // Update customers when partner changes
   useEffect(() => {
@@ -192,8 +223,14 @@ export default function AddReportModal({ partners, onClose, onSuccess, show }) {
   };
 
   return (
-    <Modal show={show} onClose={onClose} title="Add New Report">
+    <Modal isOpen={isOpen} onClose={onClose} title="Add New Report">
       <form onSubmit={handleSubmit} className="space-y-4">
+        {error && (
+          <div className="bg-red-50 p-4 rounded-md text-red-600 text-sm">
+            {error}
+          </div>
+        )}
+
         <div>
           <label htmlFor="partnerId" className="block text-sm font-medium text-gray-700">
             Partner
@@ -386,10 +423,6 @@ export default function AddReportModal({ partners, onClose, onSuccess, show }) {
             <option value="Completed">Completed</option>
           </select>
         </div>
-
-        {error && (
-          <div className="text-red-500 text-sm">{error}</div>
-        )}
 
         <div className="flex justify-end space-x-3 pt-4">
           <button

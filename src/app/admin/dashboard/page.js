@@ -8,6 +8,7 @@ import LoadingSpinner from '@/components/LoadingSpinner';
 import AddPartnerModal from '@/components/modals/AddPartnerModal';
 import AddCustomerModal from '@/components/modals/AddCustomerModal';
 import AddReportModal from '@/components/modals/AddReportModal';
+import ChangePasswordModal from '@/components/modals/ChangePasswordModal';
 import ReportInfo from '@/components/InfoViews/ReportInfo';
 import PartnerInfo from '@/components/InfoViews/PartnerInfo';
 import CustomerInfo from '@/components/InfoViews/CustomerInfo';
@@ -26,6 +27,7 @@ export default function Dashboard() {
   const [showCustomerModal, setShowCustomerModal] = useState(false);
   const [showReportModal, setShowReportModal] = useState(false);
   const [showLogoutModal, setShowLogoutModal] = useState(false);
+  const [showChangePasswordModal, setShowChangePasswordModal] = useState(false);
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
 
   const fetchData = async () => {
@@ -198,84 +200,67 @@ export default function Dashboard() {
           w-80 bg-white border-r border-gray-200 
           transform transition-transform duration-300 ease-in-out h-screen
           ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'}
-          lg:translate-x-0 lg:flex lg:flex-col
-          overflow-y-auto
+          lg:translate-x-0 flex flex-col
         `}
       >
-        <div className="min-h-full flex flex-col">
-          {/* Logo Section */}
-          <div className="p-3 border-b border-gray-200 flex-shrink-0">
-            <div className="flex justify-center mb-3">
-              <Image
-                src="/logo.svg"
-                alt="Logo"
-                width={100}
-                height={100}
-                className="rounded-lg"
-                priority={true}
-                loading="eager"
-              />
-            </div>
-            <div className="space-y-1.5">
-              <Button
-                variant="primary"
-                className="w-full justify-center py-1.5 text-sm"
-                icon={
-                  <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z" />
-                  </svg>
-                }
-                onClick={() => setShowPartnerModal(true)}
-              >
-                Add Partner
-              </Button>
-              <Button
-                variant="primary"
-                className="w-full justify-center py-1.5 text-sm"
-                icon={
-                  <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
-                  </svg>
-                }
-                onClick={() => setShowCustomerModal(true)}
-              >
-                Add Customer
-              </Button>
-              <Button
-                variant="primary"
-                className="w-full justify-center py-1.5 text-sm"
-                icon={
-                  <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 13h6m-3-3v6m5 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                  </svg>
-                }
-                onClick={() => setShowReportModal(true)}
-              >
-                Add Report
-              </Button>
-              <Button
-                variant="danger"
-                className="w-full justify-center py-1.5 text-sm"
-                icon={
-                  <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
-                  </svg>
-                }
-                onClick={() => setShowLogoutModal(true)}
-              >
-                Logout
-              </Button>
-            </div>
+        {/* Logo Section */}
+        <div className="p-4 border-b border-gray-200 flex items-center justify-between">
+          <div className="flex items-center">
+            <Image
+              src="/logo.jpg"
+              alt="Logo"
+              width={40}
+              height={40}
+              className="rounded-full"
+            />
+            <h1 className="ml-2 text-xl font-semibold text-gray-800">Admin Dashboard</h1>
           </div>
-          <div className="flex-1 p-4">
-            <TreeView data={data} onItemClick={(item, type) => {
-              handleItemClick(item, type);
-              // Close sidebar on mobile after selection
-              if (window.innerWidth < 1024) {
-                setIsSidebarOpen(false);
-              }
-            }} />
+        </div>
+
+        {/* Action Buttons */}
+        <div className="p-4 border-b border-gray-200 space-y-2">
+            <Button
+              onClick={() => setShowPartnerModal(true)}
+            className="w-full justify-center"
+            >
+              Add Partner
+            </Button>
+            <Button
+              onClick={() => setShowCustomerModal(true)}
+            className="w-full justify-center"
+            >
+              Add Customer
+            </Button>
+            <Button
+              onClick={() => setShowReportModal(true)}
+            className="w-full justify-center"
+            >
+              Add Report
+            </Button>
+            <Button
+            onClick={() => setShowChangePasswordModal(true)}
+            className="w-full justify-center"
+            variant="secondary"
+          >
+            Change Password
+          </Button>
+          <Button
+            onClick={() => setShowLogoutModal(true)}
+            className="w-full justify-center"
+              variant="danger"
+            >
+              Logout
+            </Button>
           </div>
+
+        <div className="flex-1 p-4">
+          <TreeView data={data} onItemClick={(item, type) => {
+            handleItemClick(item, type);
+            // Close sidebar on mobile after selection
+            if (window.innerWidth < 1024) {
+              setIsSidebarOpen(false);
+            }
+          }} />
         </div>
       </div>
 
@@ -317,33 +302,30 @@ export default function Dashboard() {
 
       {/* Modals */}
       <AddPartnerModal
-        show={showPartnerModal}
-        onClose={handleModalClose}
+        isOpen={showPartnerModal}
+        onClose={() => setShowPartnerModal(false)}
         onSuccess={handleModalSuccess}
       />
       <AddCustomerModal
-        show={showCustomerModal}
-        onClose={handleModalClose}
+        isOpen={showCustomerModal}
+        onClose={() => setShowCustomerModal(false)}
         onSuccess={handleModalSuccess}
-        partners={data}
       />
       <AddReportModal
-        show={showReportModal}
-        onClose={handleModalClose}
+        isOpen={showReportModal}
+        onClose={() => setShowReportModal(false)}
         onSuccess={handleModalSuccess}
-        partners={data}
+      />
+      <ChangePasswordModal
+        isOpen={showChangePasswordModal}
+        onClose={() => setShowChangePasswordModal(false)}
       />
       <ConfirmationModal
-        show={showLogoutModal}
+        isOpen={showLogoutModal}
         onClose={() => setShowLogoutModal(false)}
-        onConfirm={() => {
-          handleLogout();
-          setShowLogoutModal(false);
-        }}
+        onConfirm={handleLogout}
         title="Confirm Logout"
-        message="Are you sure you want to log out? You will need to log in again to access the dashboard."
-        confirmText="Logout"
-        confirmColor="red"
+        message="Are you sure you want to logout?"
       />
     </div>
   );

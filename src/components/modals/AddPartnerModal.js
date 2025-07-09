@@ -4,23 +4,31 @@ import { useState } from 'react';
 import { getAuthCookies } from '@/utils/auth';
 import Modal from './Modal';
 import FormField from '../FormField';
-import Button from '../Button';
 
-export default function AddPartnerModal({ show, onClose, onSuccess }) {
+export default function AddPartnerModal({ isOpen, onClose, onSuccess }) {
   const [formData, setFormData] = useState({
     name: '',
     email: '',
-    password: ''
+    password: '',
+    confirmPassword: '',
+    phone: '',
+    address: ''
   });
+  const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
-  const [errors, setErrors] = useState({});
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setLoading(true);
-    setErrors({});
+    setError('');
+
+    // Validate passwords match
+    if (formData.password !== formData.confirmPassword) {
+      setError('Passwords do not match');
+      return;
+    }
 
     try {
+      setLoading(true);
       const { token } = getAuthCookies();
       const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/partners`, {
         method: 'POST',
@@ -31,53 +39,38 @@ export default function AddPartnerModal({ show, onClose, onSuccess }) {
         body: JSON.stringify(formData)
       });
 
+      const data = await response.json();
+
       if (!response.ok) {
-        const data = await response.json();
-        if (data.errors) {
-          setErrors(data.errors);
-        } else {
-          throw new Error(data.message || 'Failed to create partner');
-        }
-        return;
+        throw new Error(data.message || 'Failed to create partner');
       }
 
-      setFormData({ name: '', email: '', password: '' });
       onSuccess();
     } catch (err) {
-      setErrors({ submit: err.message });
+      setError(err.message);
     } finally {
       setLoading(false);
     }
   };
 
   const handleChange = (e) => {
-    setFormData({
-      ...formData,
-      [e.target.name]: e.target.value
-    });
+    const { name, value } = e.target;
+    setFormData(prev => ({
+      ...prev,
+      [name]: value
+    }));
   };
 
   return (
     <Modal
-      show={show}
+      isOpen={isOpen}
       onClose={onClose}
       title="Add New Partner"
-      loading={loading}
-      footer={
-        <Button
-          type="submit"
-          form="add-partner-form"
-          variant="primary"
-          isLoading={loading}
-        >
-          Create Partner
-        </Button>
-      }
     >
-      <form id="add-partner-form" onSubmit={handleSubmit} className="space-y-4">
-        {errors.submit && (
-          <div className="bg-red-50 p-4 rounded-lg text-red-600 text-sm">
-            {errors.submit}
+      <form onSubmit={handleSubmit} className="space-y-4">
+        {error && (
+          <div className="bg-red-50 p-4 rounded-md text-red-600 text-sm">
+            {error}
           </div>
         )}
 
@@ -86,7 +79,6 @@ export default function AddPartnerModal({ show, onClose, onSuccess }) {
           name="name"
           value={formData.name}
           onChange={handleChange}
-          error={errors.name}
           required
         />
 
@@ -96,7 +88,6 @@ export default function AddPartnerModal({ show, onClose, onSuccess }) {
           name="email"
           value={formData.email}
           onChange={handleChange}
-          error={errors.email}
           required
         />
 
@@ -106,9 +97,54 @@ export default function AddPartnerModal({ show, onClose, onSuccess }) {
           name="password"
           value={formData.password}
           onChange={handleChange}
-          error={errors.password}
           required
         />
+
+        <FormField
+          label="Confirm Password"
+          type="password"
+          name="confirmPassword"
+          value={formData.confirmPassword}
+          onChange={handleChange}
+          required
+        />
+
+        <FormField
+          label="Phone"
+          type="tel"
+          name="phone"
+          value={formData.phone}
+          onChange={handleChange}
+        />
+
+        <FormField
+          label="Address"
+          name="address"
+          value={formData.address}
+          onChange={handleChange}
+          multiline
+        />
+
+        <div className="flex justify-end space-x-2 mt-4">
+          <button
+            type="button"
+            onClick={onClose}
+            className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+          >
+            Cancel
+          </button>
+          <button
+            type="submit"
+            disabled={loading}
+            className={`
+              px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-md
+              hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500
+              ${loading ? 'opacity-75 cursor-not-allowed' : ''}
+            `}
+          >
+            {loading ? 'Creating...' : 'Create Partner'}
+          </button>
+        </div>
       </form>
     </Modal>
   );

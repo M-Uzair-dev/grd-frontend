@@ -362,13 +362,11 @@ export default function ReportInfo({ reportId, onDelete, isPartnerView = false }
 
       {/* Delete Confirmation Modal */}
       <ConfirmationModal
-        show={showDeleteModal}
+        isOpen={showDeleteModal}
         onClose={() => setShowDeleteModal(false)}
         onConfirm={handleDelete}
         title="Delete Report"
         message="Are you sure you want to delete this report? This action cannot be undone."
-        confirmText="Delete Report"
-        confirmColor="red"
       />
     </div>
   );
