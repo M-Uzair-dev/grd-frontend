@@ -1,18 +1,19 @@
 'use client';
 
 import { useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { getAuthCookies } from '@/utils/auth';
+import { fetchWithAuth } from '@/utils/apiHandler';
 import Modal from './Modal';
 import FormField from '../FormField';
 
 export default function AddPartnerModal({ isOpen, onClose, onSuccess }) {
+  const router = useRouter();
   const [formData, setFormData] = useState({
     name: '',
     email: '',
     password: '',
-    confirmPassword: '',
-    phone: '',
-    address: ''
+    confirmPassword: ''
   });
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
@@ -30,20 +31,14 @@ export default function AddPartnerModal({ isOpen, onClose, onSuccess }) {
     try {
       setLoading(true);
       const { token } = getAuthCookies();
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/partners`, {
+      await fetchWithAuth(`${process.env.NEXT_PUBLIC_API_URL}/api/partners`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${token}`
         },
         body: JSON.stringify(formData)
-      });
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.message || 'Failed to create partner');
-      }
+      }, router);
 
       onSuccess();
     } catch (err) {
@@ -107,22 +102,6 @@ export default function AddPartnerModal({ isOpen, onClose, onSuccess }) {
           value={formData.confirmPassword}
           onChange={handleChange}
           required
-        />
-
-        <FormField
-          label="Phone"
-          type="tel"
-          name="phone"
-          value={formData.phone}
-          onChange={handleChange}
-        />
-
-        <FormField
-          label="Address"
-          name="address"
-          value={formData.address}
-          onChange={handleChange}
-          multiline
         />
 
         <div className="flex justify-end space-x-2 mt-4">
