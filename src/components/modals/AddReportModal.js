@@ -10,7 +10,7 @@ export default function AddReportModal({ isOpen, onClose, onSuccess }) {
   const [formData, setFormData] = useState({
     reportNumber: '',
     vnNumber: '',
-    pdfFile: null,
+    files: [],
     adminNote: '',
     partnerId: '',
     customerId: '',
@@ -157,22 +157,22 @@ export default function AddReportModal({ isOpen, onClose, onSuccess }) {
 
     try {
       // Validate required fields
-      if (!formData.reportNumber || !formData.vnNumber || !formData.partnerId || !formData.customerId || !formData.pdfFile) {
-        throw new Error('Please fill in all required fields (Report Number, VN Number, Partner, Customer, and PDF File)');
+      if (!formData.reportNumber || !formData.vnNumber || !formData.partnerId || !formData.customerId || formData.files.length === 0) {
+        throw new Error('Please fill in all required fields (Report Number, VN Number, Partner, Customer, and at least one file)');
       }
 
       const formDataToSend = new FormData();
       
       // Append all form fields
       Object.keys(formData).forEach(key => {
-        // Skip empty optional fields
-        if (formData[key]) {
-          if (key === 'pdfFile') {
-            formDataToSend.append(key, formData[key]);
-          } else {
-            formDataToSend.append(key, formData[key]);
-          }
+        if (key !== 'files' && formData[key]) {
+          formDataToSend.append(key, formData[key]);
         }
+      });
+
+      // Append all files
+      formData.files.forEach(file => {
+        formDataToSend.append('files', file);
       });
 
       // Add sendEmail parameter
@@ -183,13 +183,11 @@ export default function AddReportModal({ isOpen, onClose, onSuccess }) {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`
-          // Don't set Content-Type header, let the browser set it with the boundary
         },
         body: formDataToSend,
       });
 
       const data = await response.json();
-      console.log('Report creation response:', data);
 
       if (!response.ok) {
         throw new Error(data.message || 'Failed to create report');
@@ -217,12 +215,34 @@ export default function AddReportModal({ isOpen, onClose, onSuccess }) {
         ...prev,
         [name]: formattedNumber
       }));
+    } else if (name === 'files') {
+      setFormData(prev => ({
+        ...prev,
+        files: Array.from(files)
+      }));
     } else {
       setFormData(prev => ({
         ...prev,
         [name]: type === 'file' ? files[0] : value
       }));
     }
+  };
+
+  const handleFileAdd = (e) => {
+    const newFiles = Array.from(e.target.files);
+    setFormData(prev => ({
+      ...prev,
+      files: [...prev.files, ...newFiles]
+    }));
+    // Reset the input value so the same file can be selected again if needed
+    e.target.value = '';
+  };
+
+  const handleFileRemove = (indexToRemove) => {
+    setFormData(prev => ({
+      ...prev,
+      files: prev.files.filter((_, index) => index !== indexToRemove)
+    }));
   };
 
   return (
@@ -381,18 +401,62 @@ export default function AddReportModal({ isOpen, onClose, onSuccess }) {
         </div>
 
         <div>
-          <label htmlFor="pdfFile" className="block text-sm font-medium text-gray-700">
-            PDF File
+          <label className="block text-sm font-medium text-gray-700">
+            Upload Files
           </label>
-          <input
-            type="file"
-            id="pdfFile"
-            name="pdfFile"
-            onChange={handleChange}
-            accept=".pdf"
-            required
-            className="mt-1 block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-medium file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
-          />
+          <div className="mt-1 space-y-2">
+            <div className="flex items-center">
+              <Button
+                type="button"
+                variant="secondary"
+                onClick={() => document.getElementById('file-upload').click()}
+                icon={
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                  </svg>
+                }
+              >
+                Add File
+              </Button>
+              <input
+                type="file"
+                id="file-upload"
+                className="hidden"
+                onChange={handleFileAdd}
+                multiple
+              />
+            </div>
+
+            {formData.files.length > 0 && (
+              <div className="bg-gray-50 rounded-lg p-3">
+                <h4 className="text-sm font-medium text-gray-900 mb-2">Selected Files:</h4>
+                <ul className="space-y-2">
+                  {formData.files.map((file, index) => (
+                    <li key={index} className="flex items-center justify-between text-sm">
+                      <div className="flex items-center">
+                        <svg className="w-4 h-4 mr-2 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                        </svg>
+                        <span className="text-gray-600">{file.name}</span>
+                        <span className="ml-2 text-xs text-gray-400">
+                          ({(file.size / 1024 / 1024).toFixed(2)} MB)
+                        </span>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => handleFileRemove(index)}
+                        className="text-red-500 hover:text-red-700"
+                      >
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
+          </div>
         </div>
 
         <div>

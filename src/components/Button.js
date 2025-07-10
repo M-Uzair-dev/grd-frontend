@@ -7,9 +7,10 @@ const variants = {
 };
 
 const sizes = {
-  sm: 'px-3 py-1.5 text-sm',
-  md: 'px-4 py-2',
-  lg: 'px-6 py-3 text-lg'
+  xs: 'px-2 py-1 text-xs',
+  sm: 'px-2.5 py-1.5 text-sm',
+  md: 'px-3.5 py-2 text-sm',
+  lg: 'px-5 py-2.5 text-base'
 };
 
 export default function Button({
@@ -21,7 +22,7 @@ export default function Button({
   isLoading = false,
   ...props
 }) {
-  const baseClasses = 'inline-flex items-center justify-center font-medium rounded-lg transition-all duration-150 focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-60 disabled:cursor-not-allowed';
+  const baseClasses = 'inline-flex items-center justify-center font-medium rounded-md transition-all duration-150 focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-60 disabled:cursor-not-allowed';
   const variantClasses = variants[variant];
   const sizeClasses = sizes[size];
   const focusRingColor = {
@@ -63,7 +64,7 @@ export default function Button({
         </>
       ) : (
         <>
-          {icon && <span className="mr-2">{icon}</span>}
+          {icon && <span className={`${size === 'xs' ? 'mr-1.5' : 'mr-2'}`}>{icon}</span>}
           {children}
         </>
       )}

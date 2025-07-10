@@ -13,7 +13,9 @@ export default function AddPartnerModal({ isOpen, onClose, onSuccess }) {
     name: '',
     email: '',
     password: '',
-    confirmPassword: ''
+    confirmPassword: '',
+    personName: '',
+    personContact: ''
   });
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
@@ -37,7 +39,13 @@ export default function AddPartnerModal({ isOpen, onClose, onSuccess }) {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${token}`
         },
-        body: JSON.stringify(formData)
+        body: JSON.stringify({
+          name: formData.name,
+          email: formData.email,
+          password: formData.password,
+          personName: formData.personName,
+          personContact: formData.personContact
+        })
       }, router);
 
       onSuccess();
@@ -70,7 +78,7 @@ export default function AddPartnerModal({ isOpen, onClose, onSuccess }) {
         )}
 
         <FormField
-          label="Name"
+          label="Company Name"
           name="name"
           value={formData.name}
           onChange={handleChange}
@@ -84,6 +92,22 @@ export default function AddPartnerModal({ isOpen, onClose, onSuccess }) {
           value={formData.email}
           onChange={handleChange}
           required
+        />
+
+        <FormField
+          label="Contact Person Name"
+          name="personName"
+          value={formData.personName}
+          onChange={handleChange}
+          placeholder="Optional"
+        />
+
+        <FormField
+          label="Contact Number"
+          name="personContact"
+          value={formData.personContact}
+          onChange={handleChange}
+          placeholder="Optional"
         />
 
         <FormField

@@ -118,6 +118,14 @@ export default function PartnerInfo({ partnerId, onDelete }) {
             <dd className="mt-1 text-sm text-gray-900">{partner.email}</dd>
           </div>
           <div>
+            <dt className="text-sm font-medium text-gray-500">Contact Person</dt>
+            <dd className="mt-1 text-sm text-gray-900">{partner.personName || 'Not specified'}</dd>
+          </div>
+          <div>
+            <dt className="text-sm font-medium text-gray-500">Contact Number</dt>
+            <dd className="mt-1 text-sm text-gray-900">{partner.personContact || 'Not specified'}</dd>
+          </div>
+          <div>
             <dt className="text-sm font-medium text-gray-500">Created At</dt>
             <dd className="mt-1 text-sm text-gray-900">
               {new Date(partner.createdAt).toLocaleDateString()}

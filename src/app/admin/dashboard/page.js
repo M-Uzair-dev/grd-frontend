@@ -155,7 +155,7 @@ export default function Dashboard() {
   );
 
   return (
-    <div className="relative flex h-screen">
+    <div className="flex h-screen overflow-hidden">
       {/* Mobile Sidebar Toggle Button */}
       <button
         className="lg:hidden fixed top-4 left-4 z-50 p-2 rounded-md bg-white shadow-lg"
@@ -196,7 +196,7 @@ export default function Dashboard() {
       {/* Left Sidebar */}
       <div
         className={`
-          fixed lg:static inset-y-0 left-0 z-40
+          fixed lg:relative inset-y-0 left-0 z-40
           w-80 bg-white border-r border-gray-200 
           transform transition-transform duration-300 ease-in-out h-screen
           ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'}
@@ -218,42 +218,69 @@ export default function Dashboard() {
         </div>
 
         {/* Action Buttons */}
-        <div className="p-4 border-b border-gray-200 space-y-2">
+        <div className="p-3 border-b border-gray-200 space-y-1.5">
             <Button
               onClick={() => setShowPartnerModal(true)}
-            className="w-full justify-center"
+            className="w-full justify-center py-1.5 text-sm"
+            icon={
+              <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+              </svg>
+            }
             >
               Add Partner
             </Button>
             <Button
               onClick={() => setShowCustomerModal(true)}
-            className="w-full justify-center"
+            className="w-full justify-center py-1.5 text-sm"
+            icon={
+              <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+              </svg>
+            }
             >
               Add Customer
             </Button>
             <Button
               onClick={() => setShowReportModal(true)}
-            className="w-full justify-center"
+            className="w-full justify-center py-1.5 text-sm"
+            icon={
+              <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+              </svg>
+            }
             >
               Add Report
             </Button>
             <Button
             onClick={() => setShowChangePasswordModal(true)}
-            className="w-full justify-center"
+            className="w-full justify-center py-1.5 text-sm"
             variant="secondary"
+            icon={
+              <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z" />
+              </svg>
+            }
           >
             Change Password
           </Button>
           <Button
             onClick={() => setShowLogoutModal(true)}
-            className="w-full justify-center"
+            className="w-full justify-center py-1.5 text-sm"
               variant="danger"
+            icon={
+              <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+              </svg>
+            }
             >
               Logout
             </Button>
           </div>
 
-        <div className="flex-1 p-4">
+        {/* Tree View */}
+        <div className="flex-1 overflow-y-auto">
+          <div className="p-4">
           <TreeView data={data} onItemClick={(item, type) => {
             handleItemClick(item, type);
             // Close sidebar on mobile after selection
@@ -261,11 +288,13 @@ export default function Dashboard() {
               setIsSidebarOpen(false);
             }
           }} />
+          </div>
         </div>
       </div>
 
       {/* Main Content */}
-      <div className="flex-1 overflow-y-auto p-4 lg:p-6 ml-0">
+      <div className="flex-1 overflow-y-auto bg-gray-50">
+        <div className="p-4 lg:p-6 min-h-full">
         {selectedItem ? (
           selectedItem.type === 'report' ? (
             <ReportInfo 
@@ -298,6 +327,7 @@ export default function Dashboard() {
             </div>
           </div>
         )}
+        </div>
       </div>
 
       {/* Modals */}

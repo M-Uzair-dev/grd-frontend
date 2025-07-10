@@ -93,13 +93,6 @@ const TreeNode = ({ node, level = 0, type, onItemClick }) => {
           >
             {type === 'report' ? node.reportNumber : (node.name || node.unitName)}
           </span>
-          {hasChildren && (
-            <span className="ml-2 text-xs text-gray-400 bg-gray-100 px-2 py-1 rounded-full flex-shrink-0">
-              {type === 'partner' ? node.customers.length :
-               type === 'customer' ? node.units.length :
-               node.reports.length}
-            </span>
-          )}
           {type === 'report' && node.isNew && (
             <span className="ml-2 text-xs text-yellow-600 bg-yellow-100 px-2 py-1 rounded-full flex-shrink-0">
               New

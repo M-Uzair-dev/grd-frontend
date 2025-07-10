@@ -14,7 +14,7 @@ export default function ReportInfo({ reportId, onDelete, isPartnerView = false, 
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [showDeleteModal, setShowDeleteModal] = useState(false);
-  const [downloading, setDownloading] = useState(false);
+  const [downloading, setDownloading] = useState(null);
   const [sending, setSending] = useState(false);
   const [sendingToPartner, setSendingToPartner] = useState(false);
   const [partnerNote, setPartnerNote] = useState('');
@@ -78,26 +78,28 @@ export default function ReportInfo({ reportId, onDelete, isPartnerView = false, 
     }
   };
 
-  const handleDownload = async () => {
-    if (!report?.pdfFile) return;
+  const handleDownload = async (fileId) => {
+    if (!report?.files?.length) return;
     
     try {
-      setDownloading(true);
+      setDownloading(fileId);
       const { token } = getAuthCookies();
       
-      // Request the PDF through our backend to handle authentication
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/reports/${reportId}/download`, {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/reports/${reportId}/download/${fileId}`, {
         headers: {
           'Authorization': `Bearer ${token}`
         }
       });
 
       if (!response.ok) {
-        throw new Error('Failed to download PDF');
+        throw new Error('Failed to download file');
       }
 
       // Get the blob from the response
       const blob = await response.blob();
+      
+      // Get the file info from the report
+      const fileInfo = report.files.find(f => f._id === fileId);
       
       // Create a URL for the blob
       const url = window.URL.createObjectURL(blob);
@@ -105,7 +107,7 @@ export default function ReportInfo({ reportId, onDelete, isPartnerView = false, 
       // Create a temporary link and click it
       const link = document.createElement('a');
       link.href = url;
-      link.download = `${report.reportNumber || 'report'}.pdf`;
+      link.download = fileInfo.originalName;
       document.body.appendChild(link);
       link.click();
       
@@ -113,10 +115,10 @@ export default function ReportInfo({ reportId, onDelete, isPartnerView = false, 
       document.body.removeChild(link);
       window.URL.revokeObjectURL(url);
     } catch (err) {
-      console.error('Error downloading PDF:', err);
-      setError('Failed to download PDF. Please try again.');
+      console.error('Error downloading file:', err);
+      setError('Failed to download file. Please try again.');
     } finally {
-      setDownloading(false);
+      setDownloading(null);
     }
   };
 
@@ -239,23 +241,11 @@ export default function ReportInfo({ reportId, onDelete, isPartnerView = false, 
   if (!report) return null;
 
   return (
-    <div className="bg-white shadow rounded-lg mt-[50px] lg:mt-0 w-full">
+    <div className="bg-white shadow rounded-lg w-full h-full">
       <div className="px-6 py-4 border-b border-gray-200">
         <div className="flex justify-between items-center flex-col sm:flex-row gap-4 sm:gap-2">
           <h2 className="text-xl font-semibold text-gray-800 w-full sm:w-auto">Report Information</h2>
           <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
-            <Button
-              variant="primary"
-              onClick={handleDownload}
-              disabled={!report.pdfFile || downloading}
-              icon={
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
-                </svg>
-              }
-            >
-              {downloading ? 'Downloading...' : 'Download PDF'}
-            </Button>
             {!isPartnerView && (
               <>
                 <Button
@@ -297,6 +287,7 @@ export default function ReportInfo({ reportId, onDelete, isPartnerView = false, 
           </div>
         </div>
       </div>
+
       <div className="p-6">
         <dl className="grid grid-cols-1 gap-x-4 gap-y-6 sm:grid-cols-2">
           <div>
@@ -366,10 +357,47 @@ export default function ReportInfo({ reportId, onDelete, isPartnerView = false, 
               {new Date(report.updatedAt).toLocaleString()}
             </dd>
           </div>
+          <div className="sm:col-span-2">
+            <dt className="text-sm font-medium text-gray-500">Files</dt>
+            <dd className="mt-1">
+              {report.files && report.files.length > 0 ? (
+                <ul className="divide-y divide-gray-200">
+                  {report.files.map((file) => (
+                    <li key={file._id} className="py-2 flex justify-between items-center">
+                      <div className="flex items-center">
+                        <svg className="w-5 h-5 mr-2 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                        </svg>
+                        <span className="text-sm text-gray-900">{file.originalName}</span>
+                        <span className="ml-2 text-xs text-gray-500">
+                          {new Date(file.uploadedAt).toLocaleDateString()}
+                        </span>
+                      </div>
+                      <Button
+                        variant="secondary"
+                        onClick={() => handleDownload(file._id)}
+                        disabled={downloading === file._id}
+                        size="sm"
+                        icon={
+                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                          </svg>
+                        }
+                      >
+                        {downloading === file._id ? 'Downloading...' : 'Download'}
+                      </Button>
+                    </li>
+                  ))}
+                </ul>
+              ) : (
+                <p className="text-sm text-gray-500">No files attached</p>
+              )}
+            </dd>
+          </div>
         </dl>
 
         {isPartnerView && (
-          <div className="mt-6 border-t border-gray-200 pt-6 px-6 pb-6 space-y-4">
+          <div className="mt-6 border-t border-gray-200 pt-6 space-y-4">
             {report.isNew && (
               <Button
                 variant="secondary"

@@ -59,7 +59,9 @@ export default function EditPartner({ params }) {
         },
         body: JSON.stringify({
           name: partner.name,
-          email: partner.email
+          email: partner.email,
+          personName: partner.personName || '',
+          personContact: partner.personContact || ''
         })
       });
 
@@ -145,7 +147,7 @@ export default function EditPartner({ params }) {
         <form onSubmit={handleSubmit} className="space-y-6">
           <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
             <FormField
-              label="Name"
+              label="Company Name"
               name="name"
               value={partner.name}
               onChange={(e) => setPartner({ ...partner, name: e.target.value })}
@@ -161,6 +163,24 @@ export default function EditPartner({ params }) {
               onChange={(e) => setPartner({ ...partner, email: e.target.value })}
               error={formErrors.email}
               required
+            />
+
+            <FormField
+              label="Contact Person Name"
+              name="personName"
+              value={partner.personName || ''}
+              onChange={(e) => setPartner({ ...partner, personName: e.target.value })}
+              error={formErrors.personName}
+              placeholder="Optional"
+            />
+
+            <FormField
+              label="Contact Number"
+              name="personContact"
+              value={partner.personContact || ''}
+              onChange={(e) => setPartner({ ...partner, personContact: e.target.value })}
+              error={formErrors.personContact}
+              placeholder="Optional"
             />
           </div>
 
