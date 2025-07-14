@@ -157,8 +157,8 @@ export default function AddReportModal({ isOpen, onClose, onSuccess }) {
 
     try {
       // Validate required fields
-      if (!formData.reportNumber || !formData.vnNumber || !formData.partnerId || !formData.customerId || formData.files.length === 0) {
-        throw new Error('Please fill in all required fields (Report Number, VN Number, Partner, Customer, and at least one file)');
+      if (!formData.reportNumber || !formData.vnNumber || !formData.partnerId || formData.files.length === 0) {
+        throw new Error('Please fill in all required fields (Report Number, VN Number, Partner, and at least one file)');
       }
 
       const formDataToSend = new FormData();
@@ -277,18 +277,17 @@ export default function AddReportModal({ isOpen, onClose, onSuccess }) {
 
         <div>
           <label htmlFor="customerId" className="block text-sm font-medium text-gray-700">
-            Customer
+            Customer <span className="text-gray-400">(Optional)</span>
           </label>
           <select
             id="customerId"
             name="customerId"
             value={formData.customerId}
             onChange={handleChange}
-            required
             disabled={!formData.partnerId}
             className="mt-1 block w-full px-4 py-2.5 rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
           >
-            <option value="">Select a customer</option>
+            <option value="">Select a customer (or leave blank for direct to partner)</option>
             {customers.map(customer => (
               <option key={customer._id} value={customer._id}>
                 {customer.name}

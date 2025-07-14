@@ -102,6 +102,15 @@ const TreeNode = ({ node, level = 0, type, onItemClick }) => {
       </div>
       {isExpanded && hasChildren && (
         <div>
+          {type === 'partner' && node.reports?.map(report => (
+            <TreeNode
+              key={report._id}
+              node={report}
+              level={level + 1}
+              type="report"
+              onItemClick={onItemClick}
+            />
+          ))}
           {type === 'partner' && node.customers?.map(customer => (
             <TreeNode
               key={customer._id}

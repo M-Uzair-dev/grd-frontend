@@ -112,11 +112,11 @@ export default function CustomerInfo({ customerId, onDelete, isPartnerView = fal
       <div className="p-6">
         <dl className="grid grid-cols-1 gap-x-4 gap-y-6 sm:grid-cols-2">
           <div>
-            <dt className="text-sm font-medium text-gray-500">Name</dt>
+            <dt className="text-sm font-medium text-gray-500">Contact Name</dt>
             <dd className="mt-1 text-sm text-gray-900">{customer.name}</dd>
           </div>
           <div>
-            <dt className="text-sm font-medium text-gray-500">Email</dt>
+            <dt className="text-sm font-medium text-gray-500"> Contact Email</dt>
             <dd className="mt-1 text-sm text-gray-900">{customer.email}</dd>
           </div>
           {!isPartnerView && (

@@ -84,7 +84,7 @@ export default function AddCustomerModal({ isOpen, onClose, onSuccess }) {
         )}
 
         <FormField
-          label="Name"
+          label="Contact Name"
           name="name"
           value={formData.name}
           onChange={handleChange}
@@ -92,7 +92,7 @@ export default function AddCustomerModal({ isOpen, onClose, onSuccess }) {
         />
 
         <FormField
-          label="Email"
+          label="Contact Email"
           type="email"
           name="email"
           value={formData.email}
