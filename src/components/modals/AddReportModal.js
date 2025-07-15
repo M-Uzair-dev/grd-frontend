@@ -137,7 +137,7 @@ export default function AddReportModal({ isOpen, onClose, onSuccess }) {
       };
 
       // Add either customerId or partnerId based on what's selected
-      if (formData.customerId) {
+      if (formData.customerId && formData.customerId !== '') {
         unitData.customerId = formData.customerId;
       } else if (formData.partnerId) {
         unitData.partnerId = formData.partnerId;
@@ -166,7 +166,7 @@ export default function AddReportModal({ isOpen, onClose, onSuccess }) {
       const newUnit = {
         _id: data.unit._id,
         unitName: data.unit.unitName,
-        customerId: formData.customerId || null,
+        customerId: formData.customerId && formData.customerId !== '' ? formData.customerId : null,
         partnerId: formData.partnerId || null
       };
 
