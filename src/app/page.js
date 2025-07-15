@@ -6,6 +6,9 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { setAuthCookies, getAuthCookies } from '@/utils/auth';
 import Logo from '../../public/logo.svg';
+import { HiOutlineMail, HiOutlineLockClosed } from 'react-icons/hi';
+import { FiEye, FiEyeOff } from 'react-icons/fi';
+import LoadingSpinner from '@/components/LoadingSpinner';
 
 export default function PartnerLoginPage() {
   const router = useRouter();
@@ -66,80 +69,71 @@ export default function PartnerLoginPage() {
   };
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-md w-full space-y-8 bg-white p-8 rounded-lg shadow-md">
-        <div className="flex flex-col items-center">
-          <Logo className="w-24 h-24 rounded-lg" />
-          <h2 className="text-center text-3xl font-extrabold text-gray-900">
-            Partner Login
-          </h2>
-          
+    <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-br from-blue-50 to-blue-100">
+      <div className="max-w-md w-full bg-white/80 backdrop-blur-md p-10 rounded-2xl shadow-xl flex flex-col items-center">
+        <div className="flex flex-col items-center mb-6">
+          <Logo className="w-20 h-20 mb-2 drop-shadow-md" />
+          <h2 className="text-3xl font-bold text-gray-900 mb-1 tracking-tight">Partner Login</h2>
+          <p className="text-gray-500 text-sm">Sign in to your partner dashboard</p>
         </div>
-
-        <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
-          <div className="rounded-md shadow-sm -space-y-px">
-            <div className="mb-4">
-              <label htmlFor="email" className="block text-sm font-medium text-gray-700">
-                Email
-              </label>
-            <input
-              type="email"
-              id="email"
-              name="email"
-              value={formData.email}
-              onChange={handleChange}
-              required
-                className="mt-1 appearance-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded focus:outline-none focus:ring-blue-500 focus:border-blue-500 focus:z-10 sm:text-sm"
-              placeholder="Enter your email"
-            />
-          </div>
-
-            <div className="mb-4">
-              <label htmlFor="password" className="block text-sm font-medium text-gray-700">
-                Password
-              </label>
-              <div className="relative">
-                <input
-                  type={showPassword ? "text" : "password"}
-                  id="password"
-                  name="password"
-                  value={formData.password}
-                  onChange={handleChange}
-                  required
-                  className="mt-1 appearance-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded focus:outline-none focus:ring-blue-500 focus:border-blue-500 focus:z-10 sm:text-sm"
-                  placeholder="Enter your password"
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowPassword(!showPassword)}
-                  className="absolute inset-y-0 right-0 flex items-center pr-3 mt-1"
-                >
-                  {showPassword ? (
-                    <svg className="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-                    </svg>
-                  ) : (
-                    <svg className="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21" />
-                    </svg>
-                  )}
-                </button>
-              </div>
+        <form className="w-full space-y-5" onSubmit={handleSubmit}>
+          <div>
+            <label htmlFor="email" className="block text-xs font-semibold text-gray-600 mb-1">Email</label>
+            <div className="relative">
+              <span className="absolute inset-y-0 left-0 flex items-center pl-3 text-gray-400">
+                <HiOutlineMail className="h-5 w-5" />
+              </span>
+              <input
+                type="email"
+                id="email"
+                name="email"
+                value={formData.email}
+                onChange={handleChange}
+                required
+                className="pl-10 pr-3 py-2 w-full rounded-lg border border-gray-200 bg-gray-50 focus:ring-2 focus:ring-blue-400 focus:border-blue-400 outline-none text-gray-900 transition placeholder-gray-400 text-sm"
+                placeholder="Enter your email"
+                autoComplete="email"
+              />
             </div>
           </div>
-
+          <div>
+            <label htmlFor="password" className="block text-xs font-semibold text-gray-600 mb-1">Password</label>
+            <div className="relative">
+              <span className="absolute inset-y-0 left-0 flex items-center pl-3 text-gray-400">
+                <HiOutlineLockClosed className="h-5 w-5" />
+              </span>
+              <input
+                type={showPassword ? 'text' : 'password'}
+                id="password"
+                name="password"
+                value={formData.password}
+                onChange={handleChange}
+                required
+                className="pl-10 pr-10 py-2 w-full rounded-lg border border-gray-200 bg-gray-50 focus:ring-2 focus:ring-blue-400 focus:border-blue-400 outline-none text-gray-900 transition placeholder-gray-400 text-sm"
+                placeholder="Enter your password"
+                autoComplete="current-password"
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                className="absolute inset-y-0 right-0 flex items-center pr-3 text-gray-400 hover:text-blue-500 focus:outline-none"
+                tabIndex={-1}
+              >
+                {showPassword ? <FiEyeOff className="h-5 w-5" /> : <FiEye className="h-5 w-5" />}
+              </button>
+            </div>
+          </div>
           {error && (
-            <div className="bg-red-50 text-red-500 p-3 rounded-md text-sm">
+            <div className="bg-red-100 text-red-600 px-4 py-2 rounded-lg text-xs font-medium text-center animate-shake">
               {error}
             </div>
           )}
-
-          <button 
-            type="submit" 
+          <button
+            type="submit"
             disabled={loading}
-            className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50"
+            className="w-full flex justify-center items-center gap-2 py-2 px-4 rounded-lg shadow font-semibold text-white bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-700 hover:to-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:ring-offset-2 transition disabled:opacity-60 disabled:cursor-not-allowed"
           >
+            {loading && <LoadingSpinner className="h-5 w-5" />}
             {loading ? 'Logging in...' : 'Login'}
           </button>
         </form>
