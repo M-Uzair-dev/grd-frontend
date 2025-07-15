@@ -6,7 +6,7 @@ const TreeNode = ({ node, level = 0, type, onItemClick }) => {
   const [isExpanded, setIsExpanded] = useState(false);
   const indent = level * 16; // Reduced indentation for mobile
 
-  const hasChildren = (type === 'partner' && (node.customers?.length > 0 || node.reports?.length > 0)) ||
+  const hasChildren = (type === 'partner' && (node.customers?.length > 0 || node.units?.length > 0 || node.reports?.length > 0)) ||
     (type === 'customer' && (node.units?.length > 0 || node.reports?.length > 0)) ||
     (type === 'unit' && node.reports?.length > 0);
 
@@ -108,6 +108,15 @@ const TreeNode = ({ node, level = 0, type, onItemClick }) => {
               node={report}
               level={level + 1}
               type="report"
+              onItemClick={onItemClick}
+            />
+          ))}
+          {type === 'partner' && node.units?.map(unit => (
+            <TreeNode
+              key={unit._id}
+              node={unit}
+              level={level + 1}
+              type="unit"
               onItemClick={onItemClick}
             />
           ))}

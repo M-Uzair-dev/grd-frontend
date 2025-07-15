@@ -38,6 +38,7 @@ export default function AddReportModal({ isOpen, onClose, onSuccess }) {
           }
         });
 
+
         if (!response.ok) {
           throw new Error('Failed to fetch partners');
         }
@@ -68,10 +69,11 @@ export default function AddReportModal({ isOpen, onClose, onSuccess }) {
     }
   }, [formData.partnerId, partners]);
 
-  // Update units when customer changes
+  // Update units when customer changes or when partner changes (for partner-level units)
   useEffect(() => {
     const fetchUnits = async () => {
       if (formData.customerId) {
+        // Fetch customer units
         try {
           const { token } = getAuthCookies();
           const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/units/customer/${formData.customerId}`, {
@@ -90,6 +92,26 @@ export default function AddReportModal({ isOpen, onClose, onSuccess }) {
           console.error('Error fetching units:', err);
           setUnits([]);
         }
+      } else if (formData.partnerId) {
+        // Fetch partner units
+        try {
+          const { token } = getAuthCookies();
+          const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/units/partner/${formData.partnerId}`, {
+            headers: {
+              'Authorization': `Bearer ${token}`
+            }
+          });
+
+          if (!response.ok) {
+            throw new Error('Failed to fetch partner units');
+          }
+
+          const data = await response.json();
+          setUnits(data);
+        } catch (err) {
+          console.error('Error fetching partner units:', err);
+          setUnits([]);
+        }
       } else {
         setUnits([]);
       }
@@ -97,7 +119,7 @@ export default function AddReportModal({ isOpen, onClose, onSuccess }) {
     };
 
     fetchUnits();
-  }, [formData.customerId]);
+  }, [formData.customerId, formData.partnerId]);
 
   const handleCreateUnit = async (e) => {
     e.preventDefault();
@@ -110,16 +132,27 @@ export default function AddReportModal({ isOpen, onClose, onSuccess }) {
 
     try {
       const { token } = getAuthCookies();
+      const unitData = {
+        unitName: newUnitName
+      };
+
+      // Add either customerId or partnerId based on what's selected
+      if (formData.customerId) {
+        unitData.customerId = formData.customerId;
+      } else if (formData.partnerId) {
+        unitData.partnerId = formData.partnerId;
+      } else {
+        setUnitError('Please select either a customer or partner first');
+        return;
+      }
+
       const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/units`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${token}`
         },
-        body: JSON.stringify({
-          unitName: newUnitName,
-          customerId: formData.customerId
-        }),
+        body: JSON.stringify(unitData),
       });
 
       const data = await response.json();
@@ -133,7 +166,8 @@ export default function AddReportModal({ isOpen, onClose, onSuccess }) {
       const newUnit = {
         _id: data.unit._id,
         unitName: data.unit.unitName,
-        customerId: formData.customerId
+        customerId: formData.customerId || null,
+        partnerId: formData.partnerId || null
       };
 
       // Add new unit to the list and select it
@@ -188,6 +222,7 @@ export default function AddReportModal({ isOpen, onClose, onSuccess }) {
       });
 
       const data = await response.json();
+      console.log(response)
 
       if (!response.ok) {
         throw new Error(data.message || 'Failed to create report');
@@ -196,6 +231,7 @@ export default function AddReportModal({ isOpen, onClose, onSuccess }) {
       onSuccess();
       onClose();
     } catch (err) {
+      console.log(err)
       console.error('Report creation error:', err);
       setError(err.message);
     } finally {
@@ -296,7 +332,7 @@ export default function AddReportModal({ isOpen, onClose, onSuccess }) {
           </select>
         </div>
 
-        {formData.customerId && (
+        {(formData.customerId || formData.partnerId) && (
           <div>
             <label htmlFor="unitId" className="block text-sm font-medium text-gray-700">
               Unit (Optional)
@@ -309,7 +345,7 @@ export default function AddReportModal({ isOpen, onClose, onSuccess }) {
                 onChange={handleChange}
                 className="block w-full px-4 py-2.5 rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
               >
-                <option value="">No unit (Direct to customer)</option>
+                <option value="">No unit (Direct to {formData.customerId ? 'customer' : 'partner'})</option>
                 {units.map(unit => (
                   <option key={unit._id} value={unit._id}>
                     {unit.unitName}
@@ -329,7 +365,9 @@ export default function AddReportModal({ isOpen, onClose, onSuccess }) {
 
         {showNewUnit && (
           <div className="p-4 bg-gray-50 rounded-md">
-            <h4 className="text-sm font-medium text-gray-900 mb-2">Add New Unit</h4>
+            <h4 className="text-sm font-medium text-gray-900 mb-2">
+              Add New Unit {formData.customerId ? 'to Customer' : 'to Partner'}
+            </h4>
             <div className="space-y-2">
               <input
                 type="text"

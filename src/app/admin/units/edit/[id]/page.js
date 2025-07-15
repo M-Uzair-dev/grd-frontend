@@ -15,15 +15,17 @@ export default function EditUnit({ params }) {
   const [error, setError] = useState('');
   const [formErrors, setFormErrors] = useState({});
   const [customers, setCustomers] = useState([]);
+  const [partners, setPartners] = useState([]);
 
   const [formData, setFormData] = useState({
     unitName: '',
-    customerId: ''
+    customerId: '',
+    partnerId: ''
   });
 
   useEffect(() => {
     fetchUnit();
-    fetchCustomers();
+    fetchPartners();
   }, []);
 
   const fetchUnit = async () => {
@@ -59,14 +61,14 @@ export default function EditUnit({ params }) {
       }
       
       const data = await response.json();
-      if (!data.unitName || !data.customerId) {
+      if (!data.unitName || (!data.customerId && !data.partnerId)) {
         throw new Error('Invalid unit data received');
       }
-      
       setUnit(data);
       setFormData({
         unitName: data.unitName,
-        customerId: data.customerId._id
+        customerId: data.customerId?._id || '',
+        partnerId: data.partnerId?._id || ''
       });
       setLoading(false);
     } catch (err) {
@@ -76,51 +78,41 @@ export default function EditUnit({ params }) {
     }
   };
 
-  const fetchCustomers = async () => {
+  const fetchPartners = async () => {
     try {
       const { token } = getAuthCookies();
-      if (!token) {
-        setError('Please log in again');
-        router.push('/admin-login');
-        return;
-      }
-      
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/customers`, {
+      if (!token) return;
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/partners/nested`, {
         headers: {
           'Authorization': `Bearer ${token}`
         }
       });
-      
-      if (response.status === 401) {
-        setError('Session expired. Please log in again');
-        router.push('/admin-login');
-        return;
-      }
-      
-      if (response.status === 403) {
-        setError('You do not have permission to access this resource');
-        router.push('/admin/dashboard');
-        return;
-      }
-      
-      if (!response.ok) {
+      if (response.ok) {
         const data = await response.json();
-        throw new Error(data.message || 'Failed to fetch customers');
+        setPartners(data);
       }
-      
-      const data = await response.json();
-      setCustomers(data);
     } catch (err) {
-      console.error('Error fetching customers:', err);
-      setError(err.message || 'Error fetching customers. Please try again.');
+      console.error('Error fetching partners:', err);
     }
   };
+
+  // Update customers when partner changes
+  useEffect(() => {
+    if (formData.partnerId) {
+      const selectedPartner = partners.find(p => p._id === formData.partnerId);
+      setCustomers(selectedPartner?.customers || []);
+      // Clear customer selection when partner changes
+      setFormData(prev => ({ ...prev, customerId: '' }));
+    } else {
+      setCustomers([]);
+      setFormData(prev => ({ ...prev, customerId: '' }));
+    }
+  }, [formData.partnerId, partners]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setSaving(true);
     setFormErrors({});
-    
     try {
       const { token } = getAuthCookies();
       if (!token) {
@@ -128,44 +120,46 @@ export default function EditUnit({ params }) {
         router.push('/admin-login');
         return;
       }
-
       // Validate form data
       if (!formData.unitName.trim()) {
         setFormErrors({ unitName: 'Unit name is required' });
+        setSaving(false);
         return;
       }
-      if (!formData.customerId) {
-        setFormErrors({ customerId: 'Please select a customer' });
+      if (!formData.partnerId) {
+        setFormErrors({ partnerId: 'Partner selection is required' });
+        setSaving(false);
         return;
       }
-
+      // Prepare payload
+      const payload = {
+        unitName: formData.unitName,
+        customerId: formData.customerId || undefined,
+        partnerId: formData.partnerId
+      };
       const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/units/${params.id}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${token}`
         },
-        body: JSON.stringify(formData)
+        body: JSON.stringify(payload)
       });
-
       if (response.status === 401) {
         setError('Session expired. Please log in again');
         router.push('/admin-login');
         return;
       }
-
       if (response.status === 403) {
         setError('You do not have permission to update this unit');
+        setSaving(false);
         return;
       }
-
       if (!response.ok) {
         const data = await response.json();
         throw new Error(data.message || 'Failed to update unit');
       }
-
       const data = await response.json();
-      console.log('Unit updated successfully:', data);
       router.push('/admin/dashboard');
       router.refresh();
     } catch (err) {
@@ -177,10 +171,11 @@ export default function EditUnit({ params }) {
   };
 
   const handleChange = (e) => {
-    setFormData({
-      ...formData,
-      [e.target.name]: e.target.value
-    });
+    const { name, value } = e.target;
+    setFormData(prev => ({
+      ...prev,
+      [name]: value
+    }));
   };
 
   if (loading) return <div className="h-full flex items-center justify-center"><LoadingSpinner size="lg" /></div>;
@@ -201,77 +196,66 @@ export default function EditUnit({ params }) {
           <h1 className="text-2xl font-semibold text-gray-800">Edit Unit</h1>
           <p className="mt-1 text-sm text-gray-500">Update the unit details below.</p>
         </div>
-
         <form onSubmit={handleSubmit} className="space-y-6">
-          <div className="grid grid-cols-1 gap-6">
-            <FormField
-              label="Unit Name"
-              name="unitName"
-              value={formData.unitName}
-              onChange={handleChange}
-              error={formErrors.unitName}
-              required
-            />
-
+          <FormField
+            label="Unit Name"
+            name="unitName"
+            value={formData.unitName}
+            onChange={handleChange}
+            required
+            error={formErrors.unitName}
+          />
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                Customer
+                Partner <span className="text-red-500">*</span>
+              </label>
+              <select
+                name="partnerId"
+                value={formData.partnerId}
+                onChange={handleChange}
+                required
+                className="block w-full px-4 py-2.5 rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+              >
+                <option value="">Select a partner</option>
+                {partners.map(partner => (
+                  <option key={partner._id} value={partner._id}>{partner.name}</option>
+                ))}
+              </select>
+              {formErrors.partnerId && <div className="text-red-500 text-sm mt-1">{formErrors.partnerId}</div>}
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Customer <span className="text-gray-400">(Optional)</span>
               </label>
               <select
                 name="customerId"
                 value={formData.customerId}
                 onChange={handleChange}
-                className="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm rounded-md"
-                required
+                disabled={!formData.partnerId}
+                className="block w-full px-4 py-2.5 rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
               >
-                <option value="">Select Customer</option>
+                <option value="">Select a customer (or leave blank for direct to partner)</option>
                 {customers.map(customer => (
-                  <option key={customer._id} value={customer._id}>
-                    {customer.name} ({customer.email})
-                  </option>
+                  <option key={customer._id} value={customer._id}>{customer.name}</option>
                 ))}
               </select>
-              {formErrors.customerId && (
-                <p className="mt-2 text-sm text-red-600">{formErrors.customerId}</p>
-              )}
             </div>
           </div>
-
-          {unit.reports?.length > 0 && (
-            <div className="pt-6 border-t">
-              <label className="block text-sm font-medium text-gray-700 mb-3">Reports</label>
-              <div className="bg-gray-50 rounded-lg divide-y divide-gray-100">
-                {unit.reports.map(report => (
-                  <div key={report._id} className="p-4 hover:bg-gray-100 transition-colors duration-150">
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <h3 className="font-medium text-gray-900">Report #{report.reportNumber}</h3>
-                        <p className="text-sm text-gray-600 mt-1">VN: {report.vnNumber}</p>
-                      </div>
-                      <span className="text-sm text-gray-500 bg-white px-2 py-1 rounded-full border">
-                        {new Date(report.createdAt).toLocaleDateString()}
-                      </span>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
-
-          <div className="flex justify-end space-x-3 pt-6 border-t">
+          <div className="flex justify-end space-x-2 mt-6">
             <Button
               type="button"
-              variant="outline"
               onClick={() => router.back()}
+              variant="outline"
             >
               Cancel
             </Button>
             <Button
               type="submit"
               variant="primary"
-              isLoading={saving}
+              disabled={saving}
             >
-              Save Changes
+              {saving ? 'Saving...' : 'Save Changes'}
             </Button>
           </div>
         </form>

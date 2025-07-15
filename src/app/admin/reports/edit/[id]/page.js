@@ -73,14 +73,29 @@ export default function EditReport({ params }) {
     }
   };
 
-  const fetchUnits = async (customerId) => {
+  const fetchUnits = async (customerId, partnerId) => {
     try {
       const { token } = getAuthCookies();
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/units/customer/${customerId}`, {
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
-      });
+      let response;
+      
+      if (customerId) {
+        // Fetch customer units
+        response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/units/customer/${customerId}`, {
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        });
+      } else if (partnerId) {
+        // Fetch partner units
+        response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/units/partner/${partnerId}`, {
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        });
+      } else {
+        setUnits([]);
+        return;
+      }
       
       if (!response.ok) throw new Error('Failed to fetch units');
       
@@ -88,6 +103,7 @@ export default function EditReport({ params }) {
       setUnits(data);
     } catch (err) {
       console.error('Error fetching units:', err);
+      setUnits([]);
     }
   };
 
@@ -120,7 +136,7 @@ export default function EditReport({ params }) {
         await fetchCustomers(data.partnerId._id);
       }
       if (data.customerId?._id) {
-        await fetchUnits(data.customerId._id);
+        await fetchUnits(data.customerId._id, data.partnerId?._id);
       }
 
       setLoading(false);
@@ -238,6 +254,8 @@ export default function EditReport({ params }) {
       setUnits([]);
       if (value) {
         await fetchCustomers(value);
+        // Also fetch partner units if no customer is selected
+        await fetchUnits(null, value);
       }
     } else if (name === 'customerId') {
       setFormData(prev => ({
@@ -246,7 +264,10 @@ export default function EditReport({ params }) {
       }));
       setUnits([]);
       if (value) {
-        await fetchUnits(value);
+        await fetchUnits(value, null);
+      } else if (formData.partnerId) {
+        // If customer is cleared but partner is selected, fetch partner units
+        await fetchUnits(null, formData.partnerId);
       }
     }
   };
@@ -261,16 +282,27 @@ export default function EditReport({ params }) {
 
     try {
       const { token } = getAuthCookies();
+      const unitData = {
+        unitName: newUnitName
+      };
+
+      // Add either customerId or partnerId based on what's selected
+      if (formData.customerId) {
+        unitData.customerId = formData.customerId;
+      } else if (formData.partnerId) {
+        unitData.partnerId = formData.partnerId;
+      } else {
+        setUnitError('Please select either a customer or partner first');
+        return;
+      }
+
       const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/units`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${token}`
         },
-        body: JSON.stringify({
-          unitName: newUnitName,
-          customerId: formData.customerId
-        }),
+        body: JSON.stringify(unitData),
       });
 
       const data = await response.json();
@@ -283,7 +315,8 @@ export default function EditReport({ params }) {
       const newUnit = {
         _id: data.unit._id,
         unitName: data.unit.unitName,
-        customerId: formData.customerId
+        customerId: formData.customerId || null,
+        partnerId: formData.partnerId || null
       };
 
       setUnits(prev => [...prev, newUnit]);
@@ -357,17 +390,16 @@ export default function EditReport({ params }) {
 
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                Customer
+                Customer <span className="text-gray-400">(Optional)</span>
               </label>
               <select
                 value={formData.customerId}
                 onChange={handleChange}
                 name="customerId"
                 className="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm rounded-md"
-                required
                 disabled={!formData.partnerId}
               >
-                <option value="">Select Customer</option>
+                <option value="">Select Customer (or leave blank for direct to partner)</option>
                 {customers.map(customer => (
                   <option key={customer._id} value={customer._id}>
                     {customer.name}
@@ -388,16 +420,16 @@ export default function EditReport({ params }) {
                   onChange={handleChange}
                   name="unitId"
                   className="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm rounded-md"
-                  disabled={!formData.customerId}
+                  disabled={!formData.customerId && !formData.partnerId}
                 >
-                  <option value="">No Unit (Direct to Customer)</option>
+                  <option value="">No Unit (Direct to {formData.customerId ? 'Customer' : 'Partner'})</option>
                   {units.map(unit => (
                     <option key={unit._id} value={unit._id}>
                       {unit.unitName}
                     </option>
                   ))}
                 </select>
-                {formData.customerId && (
+                {(formData.customerId || formData.partnerId) && (
                   <button
                     type="button"
                     onClick={() => setShowNewUnit(true)}
@@ -446,7 +478,9 @@ export default function EditReport({ params }) {
           {showNewUnit && (
             <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
               <div className="bg-white rounded-lg p-6 max-w-md w-full">
-                <h3 className="text-lg font-medium text-gray-900 mb-4">Create New Unit</h3>
+                <h3 className="text-lg font-medium text-gray-900 mb-4">
+                  Create New Unit {formData.customerId ? 'to Customer' : 'to Partner'}
+                </h3>
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
                     Unit Name

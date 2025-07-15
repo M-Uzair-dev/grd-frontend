@@ -413,19 +413,22 @@ export default function ReportInfo({ reportId, onDelete, isPartnerView = false, 
                 {markingAsRead ? 'Marking as Read...' : 'Mark as Read'}
               </Button>
             )}
-            <Button
-              variant="primary"
-              onClick={handleSendToCustomer}
-              disabled={sending}
-              className="w-full justify-center"
-              icon={
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-                </svg>
-              }
-            >
-              {sending ? 'Sending...' : 'Send Report to Customer'}
-            </Button>
+            {/* Only show Send to Customer button if there's a customer to send to */}
+            {(report.customerId || (report.unitId && report.unitId.customerId)) && (
+              <Button
+                variant="primary"
+                onClick={handleSendToCustomer}
+                disabled={sending}
+                className="w-full justify-center"
+                icon={
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                  </svg>
+                }
+              >
+                {sending ? 'Sending...' : 'Send Report to Customer'}
+              </Button>
+            )}
           </div>
         )}
       </div>
