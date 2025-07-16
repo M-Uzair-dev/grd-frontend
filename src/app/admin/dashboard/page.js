@@ -87,7 +87,6 @@ export default function Dashboard() {
       setData(prevData => {
         // Create a deep copy of the data
         const newData = JSON.parse(JSON.stringify(prevData));
-        
         // Traverse through the tree to find and remove the report
         for (const partner of newData) {
           if (partner.customers) {
@@ -117,11 +116,12 @@ export default function Dashboard() {
         return newData;
       });
     }
-    
     // Clear the selected item if it was deleted
     if (selectedItem && selectedItem._id === id) {
-    setSelectedItem(null);
+      setSelectedItem(null);
     }
+    // Always refresh from backend after delete
+    fetchData();
   };
 
   const handleModalClose = () => {

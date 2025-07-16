@@ -88,10 +88,10 @@ export default function EditReport({ params }) {
       } else if (partnerId) {
         // Fetch partner units
         response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/units/partner/${partnerId}`, {
-          headers: {
-            'Authorization': `Bearer ${token}`
-          }
-        });
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
       } else {
         setUnits([]);
         return;
