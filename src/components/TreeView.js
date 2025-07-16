@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 
-const TreeNode = ({ node, level = 0, type, onItemClick }) => {
+const TreeNode = ({ node, level = 0, type, onItemClick, onAddUnit }) => {
   const [isExpanded, setIsExpanded] = useState(false);
   const indent = level * 16; // Reduced indentation for mobile
 
@@ -93,6 +93,16 @@ const TreeNode = ({ node, level = 0, type, onItemClick }) => {
           >
             {type === 'report' ? node.reportNumber : (node.name || node.unitName)}
           </span>
+          {type === 'partner' && onAddUnit && (
+            <button
+              type="button"
+              className="ml-2 px-2 py-0.5 text-xs font-bold text-green-600 bg-green-100 rounded hover:bg-green-200"
+              onClick={e => { e.stopPropagation(); onAddUnit(node); }}
+              title="Add Unit to Partner"
+            >
+              +
+            </button>
+          )}
           {type === 'report' && node.isNew && (
             <span className="ml-2 text-xs text-yellow-600 bg-yellow-100 px-2 py-1 rounded-full flex-shrink-0">
               New
@@ -166,7 +176,7 @@ const TreeNode = ({ node, level = 0, type, onItemClick }) => {
   );
 };
 
-export default function TreeView({ data, onItemClick }) {
+export default function TreeView({ data, onItemClick, onAddUnit }) {
   return (
     <div className="tree-view bg-white rounded-xl shadow-sm p-1 sm:p-2">
       {data.map((partner, index) => (
@@ -175,6 +185,7 @@ export default function TreeView({ data, onItemClick }) {
           node={partner}
           type="partner"
           onItemClick={onItemClick}
+          onAddUnit={onAddUnit}
         />
       ))}
     </div>

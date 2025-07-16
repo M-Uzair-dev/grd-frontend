@@ -16,6 +16,7 @@ import UnitInfo from '@/components/InfoViews/UnitInfo';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import ConfirmationModal from '@/components/modals/ConfirmationModal';
+import AddPartnerUnitModal from '@/components/modals/AddPartnerUnitModal';
 
 export default function Dashboard() {
   const router = useRouter();
@@ -29,6 +30,8 @@ export default function Dashboard() {
   const [showLogoutModal, setShowLogoutModal] = useState(false);
   const [showChangePasswordModal, setShowChangePasswordModal] = useState(false);
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
+  const [showAddPartnerUnitModal, setShowAddPartnerUnitModal] = useState(false);
+  const [selectedPartnerForUnit, setSelectedPartnerForUnit] = useState(null);
 
   const fetchData = async () => {
     try {
@@ -142,6 +145,11 @@ export default function Dashboard() {
     
     // Redirect to admin login
     router.push('/admin-login');
+  };
+
+  const handleAddUnitToPartner = (partner) => {
+    setSelectedPartnerForUnit(partner);
+    setShowAddPartnerUnitModal(true);
   };
 
   if (loading) return <div className="h-full flex items-center justify-center"><LoadingSpinner size="lg" /></div>;
@@ -281,13 +289,16 @@ export default function Dashboard() {
         {/* Tree View */}
         <div className="flex-1 overflow-y-auto">
           <div className="p-4">
-          <TreeView data={data} onItemClick={(item, type) => {
-            handleItemClick(item, type);
-            // Close sidebar on mobile after selection
-            if (window.innerWidth < 1024) {
-              setIsSidebarOpen(false);
-            }
-          }} />
+            <TreeView
+              data={data}
+              onItemClick={(item, type) => {
+                handleItemClick(item, type);
+                if (window.innerWidth < 1024) {
+                  setIsSidebarOpen(false);
+                }
+              }}
+              onAddUnit={handleAddUnitToPartner}
+            />
           </div>
         </div>
       </div>
@@ -356,6 +367,15 @@ export default function Dashboard() {
         onConfirm={handleLogout}
         title="Confirm Logout"
         message="Are you sure you want to logout?"
+      />
+      <AddPartnerUnitModal
+        isOpen={showAddPartnerUnitModal}
+        onClose={() => setShowAddPartnerUnitModal(false)}
+        onSuccess={() => {
+          setShowAddPartnerUnitModal(false);
+          fetchData();
+        }}
+        partnerId={selectedPartnerForUnit?._id}
       />
     </div>
   );

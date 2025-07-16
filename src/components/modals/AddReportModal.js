@@ -201,6 +201,11 @@ export default function AddReportModal({ isOpen, onClose, onSuccess }) {
         }
       });
 
+      // Explicitly append unitId if present
+      if (formData.unitId) {
+        formDataToSend.set('unitId', formData.unitId);
+      }
+
       // Append all files
       formData.files.forEach(file => {
         formDataToSend.append('files', file);
@@ -349,13 +354,15 @@ export default function AddReportModal({ isOpen, onClose, onSuccess }) {
                   </option>
                 ))}
               </select>
-              <button
-                type="button"
-                onClick={() => setShowNewUnit(true)}
-                className="px-3 py-2 text-sm font-medium text-white bg-green-500 rounded-md hover:bg-green-600"
-              >
-                +
-              </button>
+              {formData.customerId && (
+                <button
+                  type="button"
+                  onClick={() => setShowNewUnit(true)}
+                  className="px-3 py-2 text-sm font-medium text-white bg-green-500 rounded-md hover:bg-green-600"
+                >
+                  +
+                </button>
+              )}
             </div>
           </div>
         )}
