@@ -125,27 +125,24 @@ export default function AddReportModal({ isOpen, onClose, onSuccess }) {
     e.preventDefault();
     setUnitError('');
 
-    if (!newUnitName.trim()) {
-      setUnitError('Unit name is required');
+    const cleanedCustomerId = formData.customerId?.trim();
+    const cleanedPartnerId = formData.partnerId?.trim();
+
+    const unitData = {
+      unitName: newUnitName
+    };
+
+    if (cleanedCustomerId) {
+      unitData.customerId = cleanedCustomerId;
+    } else if (cleanedPartnerId) {
+      unitData.partnerId = cleanedPartnerId;
+    } else {
+      setUnitError('Please select either a customer or partner first');
       return;
     }
 
     try {
       const { token } = getAuthCookies();
-      const unitData = {
-        unitName: newUnitName
-      };
-
-      // Add either customerId or partnerId based on what's selected
-      if (formData.customerId && formData.customerId !== '') {
-        unitData.customerId = formData.customerId;
-      } else if (formData.partnerId) {
-        unitData.partnerId = formData.partnerId;
-      } else {
-        setUnitError('Please select either a customer or partner first');
-        return;
-      }
-
       const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/units`, {
         method: 'POST',
         headers: {
