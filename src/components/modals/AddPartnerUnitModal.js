@@ -19,7 +19,7 @@ export default function AddPartnerUnitModal({ isOpen, onClose, onSuccess, partne
       }
 
       const { token } = getAuthCookies();
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/units`, {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/units/partner`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
