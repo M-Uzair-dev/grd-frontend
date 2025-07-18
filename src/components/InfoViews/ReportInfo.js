@@ -229,6 +229,24 @@ export default function ReportInfo({ reportId, onDelete, isPartnerView = false, 
     }
   };
 
+  const getStatusColor = (status) => {
+    switch (status) {
+      case 'Active':
+        return 'bg-blue-100 text-blue-800 border-blue-200';
+      case 'Completed':
+        return 'bg-green-100 text-green-800 border-green-200';
+      case 'Rejected':
+        return 'bg-red-100 text-red-800 border-red-200';
+      default:
+        return 'bg-gray-100 text-gray-800 border-gray-200';
+    }
+  };
+
+  const formatEmailTimestamp = (timestamp) => {
+    if (!timestamp) return 'Email not sent';
+    return new Date(timestamp).toLocaleString();
+  };
+
   if (loading) return <div className="h-full flex items-center justify-center"><LoadingSpinner size="lg" /></div>;
   if (error) return (
     <div className="bg-red-50 p-4 rounded-lg text-red-600 flex items-center">
@@ -289,89 +307,154 @@ export default function ReportInfo({ reportId, onDelete, isPartnerView = false, 
       </div>
 
       <div className="p-6">
-        <dl className="grid grid-cols-1 gap-x-4 gap-y-6 sm:grid-cols-2">
-          <div>
-            <dt className="text-sm font-medium text-gray-500">Report Number</dt>
-            <dd className="mt-1 text-sm text-gray-900">{report.reportNumber}</dd>
-          </div>
-          <div>
-            <dt className="text-sm font-medium text-gray-500">VN Number</dt>
-            <dd className="mt-1 text-sm text-gray-900">{report.vnNumber}</dd>
-          </div>
-          <div>
-            <dt className="text-sm font-medium text-gray-500">Status</dt>
-            <dd className="mt-1 text-sm text-gray-900">{report.status}</dd>
-          </div>
-          <div>
-            <dt className="text-sm font-medium text-gray-500">Partner</dt>
-            <dd className="mt-1 text-sm text-gray-900">{report.partnerId?.name || 'N/A'}</dd>
-          </div>
-          <div>
-            <dt className="text-sm font-medium text-gray-500">Customer</dt>
-            <dd className="mt-1 text-sm text-gray-900">{report.customerId?.name || 'N/A'}</dd>
-          </div>
-          <div>
-            <dt className="text-sm font-medium text-gray-500">Unit</dt>
-            <dd className="mt-1 text-sm text-gray-900">{report.unitId?.unitName || 'N/A'}</dd>
-          </div>
-          <div className="sm:col-span-2">
-            <dt className="text-sm font-medium text-gray-500">Admin Note</dt>
-            <dd className="mt-1 text-sm text-gray-900">{report.adminNote || 'No notes'}</dd>
-          </div>
-          <div className="sm:col-span-2">
-            <dt className="text-sm font-medium text-gray-500">Partner Note</dt>
-            {isPartnerView ? (
-              <div className="mt-1">
-                <textarea
-                  rows={4}
-                  className="shadow-sm block w-full focus:ring-blue-500 focus:border-blue-500 sm:text-sm border border-gray-300 rounded-md"
-                  value={partnerNote}
-                  onChange={(e) => setPartnerNote(e.target.value)}
-                />
-                <div className="mt-2 flex justify-between items-center">
-                  <Button
-                    variant="primary"
-                    onClick={handleUpdateNote}
-                    className="text-sm"
-                  >
-                    Update Note
-                  </Button>
-                  {noteUpdated && (
-                    <span className="text-sm text-green-600">Note updated successfully!</span>
-                  )}
+        <dl className="space-y-8">
+          {/* Partner Information Section - Only show for admin */}
+          {!isPartnerView && (
+            <div>
+              <h3 className="text-xl font-bold text-gray-900 mb-4 pb-3 border-b-2 border-gray-300">Partner Information</h3>
+              <div className="grid grid-cols-1 gap-x-4 gap-y-4 sm:grid-cols-2">
+                <div>
+                  <dt className="text-sm font-bold text-gray-700">Partner Name</dt>
+                  <dd className="mt-1 text-sm text-gray-900">{report.partnerId?.name || 'N/A'}</dd>
+                </div>
+                <div>
+                  <dt className="text-sm font-bold text-gray-700">Partner Email</dt>
+                  <dd className="mt-1 text-sm text-gray-900">{report.partnerId?.email || 'N/A'}</dd>
                 </div>
               </div>
-            ) : (
-              <dd className="mt-1 text-sm text-gray-900">{report.partnerNote || 'No notes'}</dd>
-            )}
-          </div>
+            </div>
+          )}
+
+          {/* Customer Information Section - Only show if customer exists */}
+          {report.customerId && (
+            <div>
+              <h3 className="text-xl font-bold text-gray-900 mb-4 pb-3 border-b-2 border-gray-300">Customer Information</h3>
+              <div className="grid grid-cols-1 gap-x-4 gap-y-4 sm:grid-cols-2">
+                <div>
+                  <dt className="text-sm font-bold text-gray-700">Customer Name</dt>
+                  <dd className="mt-1 text-sm text-gray-900">{report.customerId.name}</dd>
+                </div>
+                <div>
+                  <dt className="text-sm font-bold text-gray-700">Customer Email</dt>
+                  <dd className="mt-1 text-sm text-gray-900">{report.customerId.email}</dd>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Unit Information Section - Only show if unit exists */}
+          {report.unitId && (
+            <div>
+              <h3 className="text-xl font-bold text-gray-900 mb-4 pb-3 border-b-2 border-gray-300">Unit Information</h3>
+              <div className="grid grid-cols-1 gap-x-4 gap-y-4 sm:grid-cols-2">
+                <div>
+                  <dt className="text-sm font-bold text-gray-700">Unit Name</dt>
+                  <dd className="mt-1 text-sm text-gray-900">{report.unitId.unitName}</dd>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Report Details Section */}
           <div>
-            <dt className="text-sm font-medium text-gray-500">Created At</dt>
-            <dd className="mt-1 text-sm text-gray-900">
-              {new Date(report.createdAt).toLocaleString()}
-            </dd>
+            <h3 className="text-xl font-bold text-gray-900 mb-4 pb-3 border-b-2 border-gray-300">Report Information</h3>
+            <div className="grid grid-cols-1 gap-x-4 gap-y-4 sm:grid-cols-2">
+              <div>
+                <dt className="text-sm font-bold text-gray-700">Report Number</dt>
+                <dd className="mt-1 text-sm text-gray-900">{report.reportNumber}</dd>
+              </div>
+              <div>
+                <dt className="text-sm font-bold text-gray-700">VN Number</dt>
+                <dd className="mt-1 text-sm text-gray-900">{report.vnNumber}</dd>
+              </div>
+              <div>
+                <dt className="text-sm font-bold text-gray-700">Status</dt>
+                <dd className="mt-1">
+                  <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border ${getStatusColor(report.status)}`}>
+                    {report.status}
+                  </span>
+                </dd>
+              </div>
+              <div>
+                <dt className="text-sm font-bold text-gray-700">Created At</dt>
+                <dd className="mt-1 text-sm text-gray-900">
+                  {new Date(report.createdAt).toLocaleString()}
+                </dd>
+              </div>
+              <div>
+                <dt className="text-sm font-bold text-gray-700">Last Updated</dt>
+                <dd className="mt-1 text-sm text-gray-900">
+                  {new Date(report.updatedAt).toLocaleString()}
+                </dd>
+              </div>
+              <div>
+                <dt className="text-sm font-bold text-gray-700">Last Email Sent</dt>
+                <dd className="mt-1 text-sm text-gray-900">
+                  {isPartnerView 
+                    ? formatEmailTimestamp(report.lastPartnerEmailSent)
+                    : formatEmailTimestamp(report.lastAdminEmailSent)
+                  }
+                </dd>
+              </div>
+            </div>
           </div>
+
+          {/* Notes Section */}
           <div>
-            <dt className="text-sm font-medium text-gray-500">Last Updated</dt>
-            <dd className="mt-1 text-sm text-gray-900">
-              {new Date(report.updatedAt).toLocaleString()}
-            </dd>
+            <h3 className="text-xl font-bold text-gray-900 mb-4 pb-3 border-b-2 border-gray-300">Notes</h3>
+            <div className="space-y-4">
+              <div>
+                <dt className="text-sm font-bold text-gray-700">Admin Note</dt>
+                <dd className="mt-1 text-sm text-gray-900">{report.adminNote || 'No notes'}</dd>
+              </div>
+              <div>
+                <dt className="text-sm font-bold text-gray-700">Partner Note</dt>
+                {isPartnerView ? (
+                  <div className="mt-1">
+                    <textarea
+                      rows={4}
+                      className="shadow-sm block w-full focus:ring-blue-500 focus:border-blue-500 sm:text-sm border border-gray-300 rounded-md"
+                      value={partnerNote}
+                      onChange={(e) => setPartnerNote(e.target.value)}
+                    />
+                    <div className="mt-2 flex justify-between items-center">
+                      <Button
+                        variant="primary"
+                        onClick={handleUpdateNote}
+                        className="text-sm"
+                      >
+                        Update Note
+                      </Button>
+                      {noteUpdated && (
+                        <span className="text-sm text-green-600">Note updated successfully!</span>
+                      )}
+                    </div>
+                  </div>
+                ) : (
+                  <dd className="mt-1 text-sm text-gray-900">{report.partnerNote || 'No notes'}</dd>
+                )}
+              </div>
+            </div>
           </div>
-          <div className="sm:col-span-2">
-            <dt className="text-sm font-medium text-gray-500">Files</dt>
-            <dd className="mt-1">
+
+          {/* Files Section */}
+          <div>
+            <h3 className="text-xl font-bold text-gray-900 mb-4 pb-3 border-b-2 border-gray-300">Files</h3>
+            <div>
               {report.files && report.files.length > 0 ? (
                 <ul className="divide-y divide-gray-200">
                   {report.files.map((file) => (
-                    <li key={file._id} className="py-2 flex justify-between items-center">
+                    <li key={file._id} className="py-3 flex justify-between items-center">
                       <div className="flex items-center">
-                        <svg className="w-5 h-5 mr-2 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <svg className="w-5 h-5 mr-3 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                         </svg>
-                        <span className="text-sm text-gray-900">{file.originalName}</span>
-                        <span className="ml-2 text-xs text-gray-500">
-                          {new Date(file.uploadedAt).toLocaleDateString()}
-                        </span>
+                        <div>
+                          <span className="text-sm font-medium text-gray-900">{file.originalName}</span>
+                          <span className="ml-2 text-xs text-gray-500">
+                            {new Date(file.uploadedAt).toLocaleDateString()}
+                          </span>
+                        </div>
                       </div>
                       <Button
                         variant="secondary"
@@ -392,12 +475,12 @@ export default function ReportInfo({ reportId, onDelete, isPartnerView = false, 
               ) : (
                 <p className="text-sm text-gray-500">No files attached</p>
               )}
-            </dd>
+            </div>
           </div>
         </dl>
 
         {isPartnerView && (
-          <div className="mt-6 border-t border-gray-200 pt-6 space-y-4">
+          <div className="mt-8 border-t border-gray-200 pt-6 space-y-4">
             {report.isNew && (
               <Button
                 variant="secondary"
