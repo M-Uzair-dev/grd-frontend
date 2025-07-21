@@ -26,8 +26,9 @@ export default function AddReportModal({ isOpen, onClose, onSuccess }) {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const [unitError, setUnitError] = useState('');
+  const [partnersLoaded, setPartnersLoaded] = useState(false);
 
-  // Fetch partners on mount
+  // Fetch partners on mount (only once or when explicitly needed)
   useEffect(() => {
     const fetchPartners = async () => {
       try {
@@ -38,23 +39,23 @@ export default function AddReportModal({ isOpen, onClose, onSuccess }) {
           }
         });
 
-
         if (!response.ok) {
           throw new Error('Failed to fetch partners');
         }
 
         const data = await response.json();
         setPartners(data);
+        setPartnersLoaded(true);
       } catch (err) {
         console.error('Error fetching partners:', err);
         setError(err.message);
       }
     };
 
-    if (isOpen) {
+    if (isOpen && !partnersLoaded) {
       fetchPartners();
     }
-  }, [isOpen]);
+  }, [isOpen, partnersLoaded]);
 
   // Update customers when partner changes
   useEffect(() => {
