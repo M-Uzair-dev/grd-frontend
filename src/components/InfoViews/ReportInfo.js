@@ -122,6 +122,39 @@ export default function ReportInfo({ reportId, onDelete, isPartnerView = false, 
     }
   };
 
+  const handlePreview = async (fileId) => {
+    try {
+      const { token } = getAuthCookies();
+      
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/reports/${reportId}/preview/${fileId}`, {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to preview file');
+      }
+
+      // Get the blob from the response
+      const blob = await response.blob();
+      
+      // Create a URL for the blob
+      const url = window.URL.createObjectURL(blob);
+      
+      // Open in new tab
+      window.open(url, '_blank');
+      
+      // Clean up after a delay to ensure the tab opens
+      setTimeout(() => {
+        window.URL.revokeObjectURL(url);
+      }, 1000);
+    } catch (err) {
+      console.error('Error previewing file:', err);
+      setError('Failed to preview file. Please try again.');
+    }
+  };
+
   const handleUpdateNote = async () => {
     try {
       const { token } = getAuthCookies();
@@ -450,7 +483,12 @@ export default function ReportInfo({ reportId, onDelete, isPartnerView = false, 
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                         </svg>
                         <div>
-                          <span className="text-sm font-medium text-gray-900">{file.originalName}</span>
+                          <button
+                            onClick={() => handlePreview(file._id)}
+                            className="text-sm font-medium text-blue-600 hover:text-blue-800 hover:underline focus:outline-none focus:underline"
+                          >
+                            {file.originalName}
+                          </button>
                           <span className="ml-2 text-xs text-gray-500">
                             {new Date(file.uploadedAt).toLocaleDateString()}
                           </span>
