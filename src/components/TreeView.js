@@ -1,9 +1,17 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import CustomTooltip from './CustomTooltip';
 
 const TreeNode = ({ node, level = 0, type, onItemClick, onAddUnit }) => {
-  const [isExpanded, setIsExpanded] = useState(false);
+  const nodeKey = `${type}_${node._id}`;
+  const [isExpanded, setIsExpanded] = useState(() => {
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem(`treeview_expanded_${nodeKey}`);
+      return saved === 'true';
+    }
+    return false;
+  });
   const indent = level * 16; // Reduced indentation for mobile
 
   const hasChildren = (type === 'partner' && (node.customers?.length > 0 || node.units?.length > 0 || node.reports?.length > 0)) ||
@@ -12,14 +20,18 @@ const TreeNode = ({ node, level = 0, type, onItemClick, onAddUnit }) => {
 
   const handleExpandClick = (e) => {
     e.stopPropagation();
-    setIsExpanded(!isExpanded);
+    const newExpanded = !isExpanded;
+    setIsExpanded(newExpanded);
+    localStorage.setItem(`treeview_expanded_${nodeKey}`, newExpanded.toString());
   };
 
   const handleItemClick = () => {
     onItemClick(node, type);
     // If has children, also toggle expansion on mobile
     if (hasChildren && window.innerWidth < 1024) {
-      setIsExpanded(!isExpanded);
+      const newExpanded = !isExpanded;
+      setIsExpanded(newExpanded);
+      localStorage.setItem(`treeview_expanded_${nodeKey}`, newExpanded.toString());
     }
   };
 
@@ -49,7 +61,6 @@ const TreeNode = ({ node, level = 0, type, onItemClick, onAddUnit }) => {
           rounded-lg my-0.5
           cursor-pointer
           group
-          ${type === 'report' && node.isNew ? 'animate-pulse' : ''}
         `}
         onClick={handleItemClick}
       >
@@ -81,18 +92,22 @@ const TreeNode = ({ node, level = 0, type, onItemClick, onAddUnit }) => {
           ) : (
             <span className="w-5 sm:w-7"></span>
           )}
-          <span className="mr-2 sm:mr-3 text-base sm:text-lg flex-shrink-0">{getIcon()}</span>
-          <span 
-            className={`
-              flex-grow text-left font-medium
-              ${type === 'report' && node.isNew ? 'text-yellow-700' : 'text-gray-700'}
-              hover:text-blue-600
-              transition-colors duration-150
-              truncate
-            `}
-          >
-            {type === 'report' ? node.reportNumber : (node.name || node.unitName)}
-          </span>
+          <span className={`mr-2 sm:mr-3 text-base sm:text-lg flex-shrink-0 ${type === 'report' && node.isNew ? 'animate-pulse' : ''}`}>{getIcon()}</span>
+          <div className="flex-grow min-w-0">
+            <CustomTooltip text={type === 'report' ? node.reportNumber : (node.name || node.unitName)}>
+              <span 
+                className={`
+                  block text-left font-medium
+                  ${type === 'report' && node.isNew ? 'text-yellow-700 animate-pulse' : 'text-gray-700'}
+                  hover:text-blue-600
+                  transition-colors duration-150
+                  truncate
+                `}
+              >
+                {type === 'report' ? node.reportNumber : (node.name || node.unitName)}
+              </span>
+            </CustomTooltip>
+          </div>
           {type === 'partner' && onAddUnit && (
             <button
               type="button"
