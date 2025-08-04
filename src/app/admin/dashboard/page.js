@@ -144,7 +144,7 @@ export default function Dashboard() {
     document.cookie = 'userRole=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
     
     // Redirect to admin login
-    router.push('/admin-login');
+    router.push('/admin');
   };
 
   const handleAddUnitToPartner = (partner) => {

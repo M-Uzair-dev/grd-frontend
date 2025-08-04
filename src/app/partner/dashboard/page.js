@@ -139,7 +139,7 @@ export default function PartnerDashboard() {
     document.cookie = 'userRole=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
     
     // Redirect to login
-    router.push('/partner-login');
+    router.push('/partner');
   };
 
   if (loading) return <div className="h-full flex items-center justify-center"><LoadingSpinner size="lg" /></div>;

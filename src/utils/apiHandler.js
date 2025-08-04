@@ -19,9 +19,11 @@ export const handleApiResponse = async (response, router) => {
       if (router) {
         const currentPath = window.location.pathname;
         if (currentPath.startsWith('/partner')) {
-          router.push('/partner-login');
+          router.push('/partner');
+        } else if (currentPath.startsWith('/admin')) {
+          router.push('/admin');
         } else {
-          router.push('/admin-login');
+          router.push('/partner');
         }
       }
     }

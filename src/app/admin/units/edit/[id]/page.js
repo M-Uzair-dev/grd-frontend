@@ -33,7 +33,7 @@ export default function EditUnit({ params }) {
       const { token } = getAuthCookies();
       if (!token) {
         setError('Please log in again');
-        router.push('/admin-login');
+        router.push('/admin');
         return;
       }
 
@@ -45,7 +45,7 @@ export default function EditUnit({ params }) {
       
       if (response.status === 401) {
         setError('Session expired. Please log in again');
-        router.push('/admin-login');
+        router.push('/admin');
         return;
       }
       
@@ -117,7 +117,7 @@ export default function EditUnit({ params }) {
       const { token } = getAuthCookies();
       if (!token) {
         setError('Please log in again');
-        router.push('/admin-login');
+        router.push('/admin');
         return;
       }
       // Validate form data
@@ -147,7 +147,7 @@ export default function EditUnit({ params }) {
       });
       if (response.status === 401) {
         setError('Session expired. Please log in again');
-        router.push('/admin-login');
+        router.push('/admin');
         return;
       }
       if (response.status === 403) {
