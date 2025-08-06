@@ -64,7 +64,7 @@ const TreeNode = ({ node, level = 0, type, onItemClick, onAddUnit }) => {
         `}
         onClick={handleItemClick}
       >
-        <div className="flex items-center w-full min-w-0" style={{ paddingLeft: `${indent}px` }}>
+        <div className="flex items-center w-full min-w-max" style={{ paddingLeft: `${indent}px` }}>
           {hasChildren ? (
             <button 
               onClick={handleExpandClick}
@@ -93,7 +93,7 @@ const TreeNode = ({ node, level = 0, type, onItemClick, onAddUnit }) => {
             <span className="w-5 sm:w-7"></span>
           )}
           <span className={`mr-2 sm:mr-3 text-base sm:text-lg flex-shrink-0 ${type === 'report' && node.isNew ? 'animate-pulse' : ''}`}>{getIcon()}</span>
-          <div className="flex-grow min-w-0">
+          <div className="flex-grow min-w-max">
             <CustomTooltip text={type === 'report' ? node.reportNumber : (node.name || node.unitName)}>
               <span 
                 className={`
@@ -101,7 +101,7 @@ const TreeNode = ({ node, level = 0, type, onItemClick, onAddUnit }) => {
                   ${type === 'report' && node.isNew ? 'text-yellow-700 animate-pulse' : 'text-gray-700'}
                   hover:text-blue-600
                   transition-colors duration-150
-                  truncate
+                  whitespace-nowrap
                 `}
               >
                 {type === 'report' ? node.reportNumber : (node.name || node.unitName)}
@@ -193,16 +193,18 @@ const TreeNode = ({ node, level = 0, type, onItemClick, onAddUnit }) => {
 
 export default function TreeView({ data, onItemClick, onAddUnit }) {
   return (
-    <div className="tree-view bg-white rounded-xl shadow-sm p-1 sm:p-2">
-      {data.map((partner, index) => (
-        <TreeNode
-          key={partner._id || index}
-          node={partner}
-          type="partner"
-          onItemClick={onItemClick}
-          onAddUnit={onAddUnit}
-        />
-      ))}
+    <div className="tree-view bg-white rounded-xl shadow-sm p-1 sm:p-2 overflow-x-auto">
+      <div className="min-w-max">
+        {data.map((partner, index) => (
+          <TreeNode
+            key={partner._id || index}
+            node={partner}
+            type="partner"
+            onItemClick={onItemClick}
+            onAddUnit={onAddUnit}
+          />
+        ))}
+      </div>
     </div>
   );
 } 

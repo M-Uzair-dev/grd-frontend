@@ -6,6 +6,7 @@ import { getAuthCookies } from '@/utils/auth';
 import Button from '@/components/Button';
 import LoadingSpinner from '@/components/LoadingSpinner';
 import ConfirmationModal from '@/components/modals/ConfirmationModal';
+import EmailConfirmationModal from '@/components/modals/EmailConfirmationModal';
 import FormField from '@/components/FormField';
 
 export default function ReportInfo({ reportId, onDelete, isPartnerView = false, onUpdate }) {
@@ -14,6 +15,8 @@ export default function ReportInfo({ reportId, onDelete, isPartnerView = false, 
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [showEmailModal, setShowEmailModal] = useState(false);
+  const [emailAction, setEmailAction] = useState(null);
   const [downloading, setDownloading] = useState(null);
   const [sending, setSending] = useState(false);
   const [sendingToPartner, setSendingToPartner] = useState(false);
@@ -198,6 +201,7 @@ export default function ReportInfo({ reportId, onDelete, isPartnerView = false, 
 
       const data = await response.json();
       setError('');
+      setShowEmailModal(false);
       alert('Report sent successfully to customer');
     } catch (err) {
       console.error('Error sending report:', err);
@@ -253,6 +257,7 @@ export default function ReportInfo({ reportId, onDelete, isPartnerView = false, 
 
       const data = await response.json();
       setError('');
+      setShowEmailModal(false);
       alert('Report sent successfully to partner');
     } catch (err) {
       console.error('Error sending report to partner:', err);
@@ -301,7 +306,10 @@ export default function ReportInfo({ reportId, onDelete, isPartnerView = false, 
               <>
                 <Button
                   variant="secondary"
-                  onClick={handleSendToPartner}
+                  onClick={() => {
+                    setEmailAction('partner');
+                    setShowEmailModal(true);
+                  }}
                   disabled={sendingToPartner}
                   icon={
                     <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -538,7 +546,10 @@ export default function ReportInfo({ reportId, onDelete, isPartnerView = false, 
             {(report.customerId || (report.unitId && report.unitId.customerId)) && (
             <Button
               variant="primary"
-              onClick={handleSendToCustomer}
+              onClick={() => {
+                setEmailAction('customer');
+                setShowEmailModal(true);
+              }}
               disabled={sending}
               className="w-full justify-center"
               icon={
@@ -561,6 +572,24 @@ export default function ReportInfo({ reportId, onDelete, isPartnerView = false, 
         onConfirm={handleDelete}
         title="Delete Report"
         message="Are you sure you want to delete this report? This action cannot be undone."
+      />
+
+      {/* Email Confirmation Modal */}
+      <EmailConfirmationModal
+        isOpen={showEmailModal}
+        onClose={() => setShowEmailModal(false)}
+        onConfirm={emailAction === 'partner' ? handleSendToPartner : handleSendToCustomer}
+        title={emailAction === 'partner' ? 'Send to Partner' : 'Send to Customer'}
+        recipient={
+          emailAction === 'partner' 
+            ? report?.partnerId?.email 
+            : (report?.customerId?.email || report?.unitId?.customerId?.email)
+        }
+        reportDetails={{
+          reportNumber: report?.reportNumber,
+          vnNumber: report?.vnNumber
+        }}
+        loading={emailAction === 'partner' ? sendingToPartner : sending}
       />
     </div>
   );
