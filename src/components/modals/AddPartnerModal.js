@@ -33,7 +33,7 @@ export default function AddPartnerModal({ isOpen, onClose, onSuccess }) {
     try {
       setLoading(true);
       const { token } = getAuthCookies();
-      await fetchWithAuth(`${process.env.NEXT_PUBLIC_API_URL}/api/partners`, {
+      const newPartner = await fetchWithAuth(`${process.env.NEXT_PUBLIC_API_URL}/api/partners`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -48,7 +48,17 @@ export default function AddPartnerModal({ isOpen, onClose, onSuccess }) {
         })
       }, router);
 
-      onSuccess();
+      // Reset form
+      setFormData({
+        name: '',
+        email: '',
+        password: '',
+        confirmPassword: '',
+        personName: '',
+        personContact: ''
+      });
+      
+      onSuccess(newPartner);
     } catch (err) {
       setError(err.message);
     } finally {

@@ -37,7 +37,7 @@ export default function AddPartnerUnitModal({ isOpen, onClose, onSuccess, partne
       }
 
       setUnitName('');
-      onSuccess && onSuccess();
+      onSuccess && onSuccess(data.unit || data);
       onClose && onClose();
     } catch (err) {
       setError(err.message);

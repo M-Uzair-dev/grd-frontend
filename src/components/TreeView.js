@@ -14,7 +14,7 @@ const TreeNode = ({ node, level = 0, type, onItemClick, onAddUnit }) => {
   });
   const indent = level * 16; // Reduced indentation for mobile
 
-  const hasChildren = (type === 'partner' && (node.customers?.length > 0 || node.units?.length > 0 || node.reports?.length > 0)) ||
+  const hasChildren = (type === 'partner' && (node.customers?.length > 0 || node.units?.length > 0)) ||
     (type === 'customer' && (node.units?.length > 0 || node.reports?.length > 0)) ||
     (type === 'unit' && node.reports?.length > 0);
 
@@ -127,33 +127,30 @@ const TreeNode = ({ node, level = 0, type, onItemClick, onAddUnit }) => {
       </div>
       {isExpanded && hasChildren && (
         <div>
-          {type === 'partner' && node.reports?.map(report => (
-            <TreeNode
-              key={report._id}
-              node={report}
-              level={level + 1}
-              type="report"
-              onItemClick={onItemClick}
-            />
-          ))}
-          {type === 'partner' && node.units?.map(unit => (
-            <TreeNode
-              key={unit._id}
-              node={unit}
-              level={level + 1}
-              type="unit"
-              onItemClick={onItemClick}
-            />
-          ))}
-          {type === 'partner' && node.customers?.map(customer => (
-            <TreeNode
-              key={customer._id}
-              node={customer}
-              level={level + 1}
-              type="customer"
-              onItemClick={onItemClick}
-            />
-          ))}
+          {/* Partner level: Show partner units and customers (no direct partner reports) */}
+          {type === 'partner' && (
+            <>
+              {node.units?.map(unit => (
+                <TreeNode
+                  key={unit._id}
+                  node={unit}
+                  level={level + 1}
+                  type="unit"
+                  onItemClick={onItemClick}
+                />
+              ))}
+              {node.customers?.map(customer => (
+                <TreeNode
+                  key={customer._id}
+                  node={customer}
+                  level={level + 1}
+                  type="customer"
+                  onItemClick={onItemClick}
+                />
+              ))}
+            </>
+          )}
+          {/* Customer level: Show units and reports */}
           {type === 'customer' && (
             <>
               {node.units?.map(unit => (
@@ -176,6 +173,7 @@ const TreeNode = ({ node, level = 0, type, onItemClick, onAddUnit }) => {
               ))}
             </>
           )}
+          {/* Unit level: Show reports */}
           {type === 'unit' && node.reports?.map(report => (
             <TreeNode
               key={report._id}
@@ -207,4 +205,4 @@ export default function TreeView({ data, onItemClick, onAddUnit }) {
       </div>
     </div>
   );
-} 
+}

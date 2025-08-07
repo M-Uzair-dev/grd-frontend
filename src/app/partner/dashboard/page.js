@@ -17,6 +17,19 @@ const extractNewReports = (data) => {
   const reports = [];
   
   data.forEach(partner => {
+    // Add partner unit reports
+    partner.units?.forEach(unit => {
+      unit.reports?.forEach(report => {
+        if (report.isNew) {
+          reports.push({
+            ...report,
+            partnerName: partner.name,
+            unitName: unit.unitName
+          });
+        }
+      });
+    });
+    
     partner.customers?.forEach(customer => {
       // Add direct customer reports
       customer.reports?.forEach(report => {
@@ -72,7 +85,7 @@ const NewReportsChips = ({ reports, onReportClick }) => {
                            opacity-0 group-hover:opacity-100 transition-opacity duration-150
                            -top-8 left-1/2 transform -translate-x-1/2 whitespace-nowrap z-10"
             >
-              {report.customerName}
+              {report.partnerName || report.customerName}
               {report.unitName ? ` → ${report.unitName}` : ''}
             </span>
           </button>
@@ -91,6 +104,7 @@ export default function PartnerDashboard() {
   const [showLogoutModal, setShowLogoutModal] = useState(false);
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const [newReports, setNewReports] = useState([]);
+  const [reportLoading, setReportLoading] = useState(false);
 
   const fetchData = async () => {
     try {
@@ -118,19 +132,69 @@ export default function PartnerDashboard() {
     }
   };
 
+  const updateReportInData = (updatedReport) => {
+    if (!updatedReport || !updatedReport._id) {
+      console.warn('updateReportInData called with invalid data:', updatedReport);
+      return;
+    }
+    
+    setData(prevData => {
+      if (!prevData) return prevData;
+      
+      const newData = prevData.map(partner => ({
+        ...partner,
+        // Update partner unit reports  
+        units: partner.units?.map(unit => ({
+          ...unit,
+          reports: unit.reports?.map(report => 
+            report._id === updatedReport._id ? updatedReport : report
+          ) || []
+        })) || [],
+        // Update customer reports
+        customers: partner.customers?.map(customer => ({
+          ...customer,
+          reports: customer.reports?.map(report => 
+            report._id === updatedReport._id ? updatedReport : report
+          ) || [],
+          units: customer.units?.map(unit => ({
+            ...unit,
+            reports: unit.reports?.map(report => 
+              report._id === updatedReport._id ? updatedReport : report
+            ) || []
+          })) || []
+        })) || []
+      }));
+      
+      setNewReports(extractNewReports(newData));
+      return newData;
+    });
+    
+    // Update selected item if it's the same report
+    if (selectedItem && selectedItem._id === updatedReport._id) {
+      setSelectedItem({ ...updatedReport, type: selectedItem.type });
+    }
+  };
+
   useEffect(() => {
     fetchData();
   }, []);
 
   const handleItemClick = (item, type) => {
-    if (selectedItem && selectedItem._id === item._id) {
-      fetchData();
-    }
+    setReportLoading(true);
     setSelectedItem({ ...item, type });
+    // Reset loading after a brief moment (the ReportInfo component will handle its own loading)
+    setTimeout(() => setReportLoading(false), 100);
   };
 
   const handleReportChipClick = (report) => {
+    setReportLoading(true);
     setSelectedItem({ ...report, type: 'report' });
+    // Close sidebar on mobile after selection
+    if (window.innerWidth < 1024) {
+      setIsSidebarOpen(false);
+    }
+    // Reset loading after a brief moment (the ReportInfo component will handle its own loading)
+    setTimeout(() => setReportLoading(false), 100);
   };
 
   const handleLogout = () => {
@@ -262,26 +326,34 @@ export default function PartnerDashboard() {
 
         {/* Selected Item Info */}
         <div className="mt-6">
-          {selectedItem?.type === 'report' && (
-            <ReportInfo
-              reportId={selectedItem._id}
-              isPartnerView={true}
-              onUpdate={fetchData}
-            />
+          {reportLoading ? (
+            <div className="bg-white shadow rounded-lg w-full h-64 flex items-center justify-center">
+              <LoadingSpinner size="lg" />
+            </div>
+          ) : (
+            <>
+              {selectedItem?.type === 'report' && (
+                <ReportInfo
+                  reportId={selectedItem._id}
+                  isPartnerView={true}
+                  onUpdate={updateReportInData}
+                />
+              )}
+              {selectedItem?.type === 'customer' && (
+                <CustomerInfo
+                  customerId={selectedItem._id}
+                  isPartnerView={true}
+                />
+              )}
+              {selectedItem?.type === 'unit' && (
+                <UnitInfo
+                  unitId={selectedItem._id}
+                  isPartnerView={true}
+                />
+              )}
+            </>
           )}
-          {selectedItem?.type === 'customer' && (
-            <CustomerInfo
-              customerId={selectedItem._id}
-              isPartnerView={true}
-            />
-          )}
-          {selectedItem?.type === 'unit' && (
-            <UnitInfo
-              unitId={selectedItem._id}
-              isPartnerView={true}
-            />
-          )}
-          </div>
+        </div>
         </div>
       </div>
 

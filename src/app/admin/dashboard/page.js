@@ -32,6 +32,7 @@ export default function Dashboard() {
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const [showAddPartnerUnitModal, setShowAddPartnerUnitModal] = useState(false);
   const [selectedPartnerForUnit, setSelectedPartnerForUnit] = useState(null);
+  const [creatingItem, setCreatingItem] = useState(false);
 
   const fetchData = async () => {
     try {
@@ -63,9 +64,6 @@ export default function Dashboard() {
   }, []);
 
   const handleItemClick = (item, type) => {
-    if (selectedItem && selectedItem._id === item._id) {
-      fetchData();
-    }
     setSelectedItem({ ...item, type });
   };
 
@@ -123,19 +121,56 @@ export default function Dashboard() {
     if (selectedItem && selectedItem._id === id) {
       setSelectedItem(null);
     }
-    // Always refresh from backend after delete
-    fetchData();
+    // No need to refetch - state already updated above
   };
 
   const handleModalClose = () => {
     setShowPartnerModal(false);
     setShowCustomerModal(false);
     setShowReportModal(false);
+    setCreatingItem(false);
   };
 
-  const handleModalSuccess = () => {
+  const handleModalSuccess = (newItem, type) => {
     handleModalClose();
-    fetchData();
+    setCreatingItem(false);
+    
+    if (type === 'partner') {
+      setData(prevData => [...prevData, newItem]);
+    } else if (type === 'customer') {
+      setData(prevData => 
+        prevData.map(partner => 
+          partner._id === newItem.partnerId 
+            ? { ...partner, customers: [...(partner.customers || []), newItem] }
+            : partner
+        )
+      );
+    } else if (type === 'report') {
+      // Handle report creation - could be for customer or unit
+      setData(prevData => {
+        return prevData.map(partner => ({
+          ...partner,
+          customers: partner.customers?.map(customer => {
+            // Check if report belongs to this customer directly
+            if (customer._id === newItem.customerId) {
+              return {
+                ...customer,
+                reports: [...(customer.reports || []), newItem]
+              };
+            }
+            // Check if report belongs to a unit under this customer
+            return {
+              ...customer,
+              units: customer.units?.map(unit => 
+                unit._id === newItem.unitId
+                  ? { ...unit, reports: [...(unit.reports || []), newItem] }
+                  : unit
+              ) || []
+            };
+          }) || []
+        }));
+      });
+    }
   };
 
   const handleLogout = () => {
@@ -228,7 +263,10 @@ export default function Dashboard() {
         {/* Action Buttons */}
         <div className="p-3 border-b border-gray-200 space-y-1.5">
             <Button
-              onClick={() => setShowPartnerModal(true)}
+              onClick={() => {
+                setCreatingItem(true);
+                setShowPartnerModal(true);
+              }}
             className="w-full justify-center py-1.5 text-sm"
             icon={
               <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -239,7 +277,10 @@ export default function Dashboard() {
               Add Partner
             </Button>
             <Button
-              onClick={() => setShowCustomerModal(true)}
+              onClick={() => {
+                setCreatingItem(true);
+                setShowCustomerModal(true);
+              }}
             className="w-full justify-center py-1.5 text-sm"
             icon={
               <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -250,7 +291,10 @@ export default function Dashboard() {
               Add Customer
             </Button>
             <Button
-              onClick={() => setShowReportModal(true)}
+              onClick={() => {
+                setCreatingItem(true);
+                setShowReportModal(true);
+              }}
             className="w-full justify-center py-1.5 text-sm"
             icon={
               <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -344,18 +388,39 @@ export default function Dashboard() {
       {/* Modals */}
       <AddPartnerModal
         isOpen={showPartnerModal}
-        onClose={() => setShowPartnerModal(false)}
-        onSuccess={handleModalSuccess}
+        onClose={() => {
+          setShowPartnerModal(false);
+          setCreatingItem(false);
+        }}
+        onSuccess={(newPartner) => {
+          setCreatingItem(false);
+          handleModalSuccess(newPartner, 'partner');
+        }}
+        onOpen={() => setCreatingItem(true)}
       />
       <AddCustomerModal
         isOpen={showCustomerModal}
-        onClose={() => setShowCustomerModal(false)}
-        onSuccess={handleModalSuccess}
+        onClose={() => {
+          setShowCustomerModal(false);
+          setCreatingItem(false);
+        }}
+        onSuccess={(newCustomer) => {
+          setCreatingItem(false);
+          handleModalSuccess(newCustomer, 'customer');
+        }}
+        onOpen={() => setCreatingItem(true)}
       />
       <AddReportModal
         isOpen={showReportModal}
-        onClose={() => setShowReportModal(false)}
-        onSuccess={handleModalSuccess}
+        onClose={() => {
+          setShowReportModal(false);
+          setCreatingItem(false);
+        }}
+        onSuccess={(newReport) => {
+          setCreatingItem(false);
+          handleModalSuccess(newReport, 'report');
+        }}
+        onOpen={() => setCreatingItem(true)}
       />
       <ChangePasswordModal
         isOpen={showChangePasswordModal}
@@ -371,9 +436,20 @@ export default function Dashboard() {
       <AddPartnerUnitModal
         isOpen={showAddPartnerUnitModal}
         onClose={() => setShowAddPartnerUnitModal(false)}
-        onSuccess={() => {
+        onSuccess={(newUnit) => {
           setShowAddPartnerUnitModal(false);
-          fetchData();
+          // Update the data locally - partner units are handled differently
+          setData(prevData => 
+            prevData.map(partner => 
+              partner._id === selectedPartnerForUnit?._id
+                ? { 
+                    ...partner, 
+                    customers: [...(partner.customers || [])],
+                    partnerUnits: [...(partner.partnerUnits || []), newUnit]
+                  }
+                : partner
+            )
+          );
         }}
         partnerId={selectedPartnerForUnit?._id}
       />

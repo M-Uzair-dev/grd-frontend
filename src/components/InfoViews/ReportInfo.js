@@ -175,9 +175,13 @@ export default function ReportInfo({ reportId, onDelete, isPartnerView = false, 
       }
 
       const data = await response.json();
-      setReport(data.report);
+      const updatedReport = data.report || data;
+      setReport(updatedReport);
       setNoteUpdated(true);
       setTimeout(() => setNoteUpdated(false), 3000);
+      if (onUpdate && updatedReport) {
+        onUpdate(updatedReport);
+      }
     } catch (err) {
       console.error('Error updating note:', err);
       setError(err.message);
@@ -227,10 +231,11 @@ export default function ReportInfo({ reportId, onDelete, isPartnerView = false, 
       }
 
       const data = await response.json();
-      setReport(data.report);
+      const updatedReport = data.report || data;
+      setReport(updatedReport);
       setError('');
-      if (onUpdate) {
-        onUpdate();
+      if (onUpdate && updatedReport) {
+        onUpdate(updatedReport);
       }
     } catch (err) {
       console.error('Error marking report as read:', err);

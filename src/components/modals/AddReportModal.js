@@ -231,7 +231,19 @@ export default function AddReportModal({ isOpen, onClose, onSuccess }) {
         throw new Error(data.message || 'Failed to create report');
       }
 
-      onSuccess();
+      // Reset form
+      setFormData({
+        reportNumber: '',
+        vnNumber: '',
+        files: [],
+        adminNote: '',
+        partnerId: '',
+        customerId: '',
+        unitId: '',
+        status: 'Active'
+      });
+      
+      onSuccess(data.report || data);
       onClose();
     } catch (err) {
       console.log(err)

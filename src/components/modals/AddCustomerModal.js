@@ -45,7 +45,7 @@ export default function AddCustomerModal({ isOpen, onClose, onSuccess }) {
     try {
       setLoading(true);
       const { token } = getAuthCookies();
-      await fetchWithAuth(`${process.env.NEXT_PUBLIC_API_URL}/api/customers`, {
+      const newCustomer = await fetchWithAuth(`${process.env.NEXT_PUBLIC_API_URL}/api/customers`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -54,7 +54,14 @@ export default function AddCustomerModal({ isOpen, onClose, onSuccess }) {
         body: JSON.stringify(formData)
       }, router);
 
-      onSuccess();
+      // Reset form
+      setFormData({
+        name: '',
+        email: '',
+        partnerId: ''
+      });
+      
+      onSuccess(newCustomer);
     } catch (err) {
       setError(err.message);
     } finally {
