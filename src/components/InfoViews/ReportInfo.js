@@ -231,9 +231,19 @@ export default function ReportInfo({ reportId, onDelete, isPartnerView = false, 
       }
 
       const data = await response.json();
-      const updatedReport = data.report || data;
+      console.log('Mark as read response:', data); // Debug log
+      
+      // Update the current report with isNew: false while preserving all other data
+      const updatedReport = {
+        ...report,
+        isNew: false,
+        updatedAt: new Date().toISOString()
+      };
+      
       setReport(updatedReport);
       setError('');
+      
+      // Call onUpdate with the updated report to refresh the dashboard
       if (onUpdate && updatedReport) {
         onUpdate(updatedReport);
       }

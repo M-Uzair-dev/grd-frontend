@@ -67,61 +67,19 @@ export default function Dashboard() {
     setSelectedItem({ ...item, type });
   };
 
+  const handleReportUpdate = (updatedReport) => {
+    // For admin dashboard, we'll refetch data to keep it simple
+    // This handles any report updates like partner notes, status changes, etc.
+    fetchData();
+  };
+
   const handleDelete = (type, id) => {
-    // Remove the item from the data tree
-    if (type === 'partner') {
-      setData(data.filter(partner => partner._id !== id));
-    } else if (type === 'customer') {
-      setData(data.map(partner => ({
-        ...partner,
-        customers: partner.customers?.filter(customer => customer._id !== id) || []
-      })));
-    } else if (type === 'unit') {
-      setData(data.map(partner => ({
-        ...partner,
-        customers: partner.customers?.map(customer => ({
-          ...customer,
-          units: customer.units?.filter(unit => unit._id !== id) || []
-        })) || []
-      })));
-    } else if (type === 'report') {
-      setData(prevData => {
-        // Create a deep copy of the data
-        const newData = JSON.parse(JSON.stringify(prevData));
-        // Traverse through the tree to find and remove the report
-        for (const partner of newData) {
-          if (partner.customers) {
-            for (const customer of partner.customers) {
-              if (customer.units) {
-                for (const unit of customer.units) {
-                  if (unit.reports) {
-                    const reportIndex = unit.reports.findIndex(report => report._id === id);
-                    if (reportIndex !== -1) {
-                      unit.reports.splice(reportIndex, 1);
-                      return newData;
-                    }
-                  }
-                }
-              }
-              // Also check for reports directly under customer
-              if (customer.reports) {
-                const reportIndex = customer.reports.findIndex(report => report._id === id);
-                if (reportIndex !== -1) {
-                  customer.reports.splice(reportIndex, 1);
-                  return newData;
-                }
-              }
-            }
-          }
-        }
-        return newData;
-      });
-    }
     // Clear the selected item if it was deleted
     if (selectedItem && selectedItem._id === id) {
       setSelectedItem(null);
     }
-    // No need to refetch - state already updated above
+    // Refetch data after deletion
+    fetchData();
   };
 
   const handleModalClose = () => {
@@ -134,43 +92,8 @@ export default function Dashboard() {
   const handleModalSuccess = (newItem, type) => {
     handleModalClose();
     setCreatingItem(false);
-    
-    if (type === 'partner') {
-      setData(prevData => [...prevData, newItem]);
-    } else if (type === 'customer') {
-      setData(prevData => 
-        prevData.map(partner => 
-          partner._id === newItem.partnerId 
-            ? { ...partner, customers: [...(partner.customers || []), newItem] }
-            : partner
-        )
-      );
-    } else if (type === 'report') {
-      // Handle report creation - could be for customer or unit
-      setData(prevData => {
-        return prevData.map(partner => ({
-          ...partner,
-          customers: partner.customers?.map(customer => {
-            // Check if report belongs to this customer directly
-            if (customer._id === newItem.customerId) {
-              return {
-                ...customer,
-                reports: [...(customer.reports || []), newItem]
-              };
-            }
-            // Check if report belongs to a unit under this customer
-            return {
-              ...customer,
-              units: customer.units?.map(unit => 
-                unit._id === newItem.unitId
-                  ? { ...unit, reports: [...(unit.reports || []), newItem] }
-                  : unit
-              ) || []
-            };
-          }) || []
-        }));
-      });
-    }
+    // Refetch data after creation
+    fetchData();
   };
 
   const handleLogout = () => {
@@ -355,6 +278,7 @@ export default function Dashboard() {
             <ReportInfo 
               reportId={selectedItem._id} 
               onDelete={() => handleDelete('report', selectedItem._id)}
+              onUpdate={handleReportUpdate}
             />
           ) : selectedItem.type === 'partner' ? (
             <PartnerInfo 
@@ -438,18 +362,8 @@ export default function Dashboard() {
         onClose={() => setShowAddPartnerUnitModal(false)}
         onSuccess={(newUnit) => {
           setShowAddPartnerUnitModal(false);
-          // Update the data locally - partner units are handled differently
-          setData(prevData => 
-            prevData.map(partner => 
-              partner._id === selectedPartnerForUnit?._id
-                ? { 
-                    ...partner, 
-                    customers: [...(partner.customers || [])],
-                    partnerUnits: [...(partner.partnerUnits || []), newUnit]
-                  }
-                : partner
-            )
-          );
+          // Refetch data after partner unit creation
+          fetchData();
         }}
         partnerId={selectedPartnerForUnit?._id}
       />
